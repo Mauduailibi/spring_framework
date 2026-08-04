@@ -1,0 +1,664 @@
+% =============================================================================
+% Aula 01 — Introdução ao Spring Boot + Setup + Primeiro projeto
+% Beamer + tema Madrid | Curso Entra21 — Spring Framework
+% Compilar: pdflatex slides-aula-01.tex  (duas vezes se usar TOC)
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+% --- Cores e código ---
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codeblue}{RGB}{30,70,160}
+\definecolor{codered}{RGB}{180,50,50}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codered},
+  tabsize=2,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+           {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+}
+
+\title{Aula 01 --- Spring Framework}
+\subtitle{Introdução · Setup no Windows · Primeiro projeto}
+\author{Entra21 --- Trilha Java}
+\institute{Última disciplina da trilha}
+\date{}
+
+\begin{document}
+
+% =============================================================================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Bem-vindos à última disciplina da trilha}
+  Vocês já passaram por muita coisa:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Fundamentos de Programação
+    \item Orientação a Objetos
+    \item Java Web
+    \item \textbf{Spring Framework} $\leftarrow$ estamos aqui
+  \end{enumerate}
+
+  \vspace{0.8em}
+  \begin{block}{Promessa desta disciplina}
+    Vamos criar aplicações web em Java de um jeito \textbf{mais prático}
+    do que montar Servlet + Tomcat na mão --- sem apagar o que vocês
+    já aprenderam.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Como vamos estudar}
+  \begin{itemize}
+    \item Ritmo \textbf{devagar} e com pausas para dúvidas
+    \item Explicações com \textbf{analogias} do dia a dia
+    \item Um único repositório com \textbf{todos os códigos} da disciplina
+    \item Em cada aula: algo feito \textbf{juntos} + um \textbf{desafio} sozinho
+  \end{itemize}
+
+  \vspace{0.8em}
+  \begin{alertblock}{Regra de ouro}
+    Se travou: pare, respire, peça ajuda. Travamento faz parte do processo.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Mapa da aula de hoje}
+  \tableofcontents
+\end{frame}
+
+% #############################################################################
+\section{O que é Spring Boot?}
+
+% =============================================================================
+\begin{frame}{Lembra do Java Web?}
+  Na disciplina anterior, para uma página responder no navegador, vocês
+  tipicamente precisavam cuidar de várias peças:
+
+  \vspace{0.6em}
+  \begin{itemize}
+    \item Instalar / configurar o \textbf{Tomcat}
+    \item Criar \textbf{Servlets}
+    \item Configurar o \texttt{web.xml} (em muitos projetos)
+    \item Empacotar e publicar a aplicação
+  \end{itemize}
+
+  \vspace{0.6em}
+  Funciona. Mas tem muita \textbf{montagem} antes do “olá, mundo”.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Analogia da cozinha}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Java Web ``na mão''}
+        Você monta a cozinha:\\
+        fogão, pia, geladeira\ldots\\
+        e \textbf{depois} cozinha.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Spring Boot}
+        A cozinha já vem montada.\\
+        Você foca em \textbf{preparar o prato}\\
+        (a regra de negócio).
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{1em}
+  \begin{alertblock}{Frase para lembrar}
+    Spring Boot \textbf{não substitui} Java.\\
+    Ele \textbf{organiza e acelera} o trabalho com Java.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Spring $\times$ Spring Boot}
+  \begin{description}
+    \item[Spring] Conjunto grande de ferramentas para aplicações Java
+      (web, dados, segurança\ldots).
+    \item[Spring Boot] Forma \textbf{prática} de usar o Spring:
+      configurações inteligentes + servidor embutido + projeto pronto para rodar.
+  \end{description}
+
+  \vspace{0.8em}
+  Nesta disciplina, vamos falar principalmente de \textbf{Spring Boot}.\\
+  Quando alguém no mercado diz “trabalhei com Spring”, quase sempre
+  envolve Spring Boot.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{O que o Spring Boot faz por nós (versão simples)}
+  \begin{enumerate}
+    \item Sobe um \textbf{servidor web embutido} (não precisamos instalar Tomcat separado)
+    \item Lê o \texttt{pom.xml} e baixa as \textbf{dependências}
+    \item Liga as peças da aplicação com menos arquivo de configuração manual
+    \item Deixa a gente escrever classes com anotações como \texttt{@RestController}
+  \end{enumerate}
+
+  \vspace{0.8em}
+  \begin{block}{Meta de hoje}
+    Criar um projeto, rodar, e ver uma mensagem no navegador.\\
+    Só isso --- e isso já é uma vitória grande.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Comparação rápida (mental)}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Ideia & Java Web & Spring Boot \\
+    \midrule
+    Pedido HTTP & Servlet & Controller \\
+    Servidor & Tomcat externo & Embutido \\
+    Configuração & muita manual & muita automática \\
+    Dependências & Maven (\texttt{pom.xml}) & Maven (\texttt{pom.xml}) \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{1em}
+  \textbf{Maven continua!} Vocês já viram \texttt{pom.xml}. Isso ajuda bastante.
+\end{frame}
+
+% #############################################################################
+\section{Setup no Windows}
+
+% =============================================================================
+\begin{frame}{Checklist de instalação (Windows)}
+  Vamos instalar / conferir \textbf{três coisas}:
+
+  \vspace{0.6em}
+  \begin{enumerate}
+    \item \textbf{JDK 21} --- a máquina virtual Java
+    \item \textbf{VS Code} --- nosso editor
+    \item Extensões: \textbf{Java} + \textbf{Spring Boot}
+  \end{enumerate}
+
+  \vspace{0.8em}
+  \begin{alertblock}{Importante}
+    Façam \textbf{juntos} com o professor. Não adianta correr e pular etapa.\\
+    Cada máquina é um pouco diferente --- vamos com calma.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo 1 --- Instalar o JDK 21}
+  \begin{enumerate}
+    \item Abra o navegador em:\\
+          \url{https://adoptium.net/}
+    \item Escolha:
+      \begin{itemize}
+        \item Version: \textbf{21 (LTS)}
+        \item Operating System: \textbf{Windows}
+        \item Architecture: \textbf{x64} (maioria dos PCs)
+      \end{itemize}
+    \item Baixe o instalador \texttt{.msi} e execute
+    \item Aceite as opções padrão (deixe marcar \textbf{Add to PATH} se aparecer)
+  \end{enumerate}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Passo 1 --- Conferir o Java}
+  Abra o \textbf{Prompt de Comando} ou o \textbf{Terminal} do Windows:
+
+  \vspace{0.4em}
+\begin{lstlisting}[language=bash]
+java -version
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Você deve ver algo parecido com:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+openjdk version "21.0.x" ...
+\end{lstlisting}
+
+  \vspace{0.5em}
+  \begin{block}{Se der ``não é reconhecido como comando''}
+    O Java não entrou no PATH. Reinstale marcando a opção de PATH\\
+    ou peça ajuda ao professor antes de continuar.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo 2 --- Instalar o VS Code}
+  \begin{enumerate}
+    \item Acesse \url{https://code.visualstudio.com/}
+    \item Baixe para \textbf{Windows}
+    \item Instale com as opções padrão
+    \item (Opcional, mas útil) marque:
+      \begin{itemize}
+        \item Abrir com Code no menu de contexto
+        \item Adicionar ao PATH
+      \end{itemize}
+  \end{enumerate}
+
+  \vspace{0.6em}
+  O VS Code é só o editor. As “superpoderes” Java vêm das \textbf{extensões}.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo 3 --- Extensões no VS Code}
+  No VS Code, clique no ícone de \textbf{Extensões} (ou \texttt{Ctrl+Shift+X}).
+
+  \vspace{0.5em}
+  Instale estas duas:
+
+  \begin{enumerate}
+    \item \textbf{Extension Pack for Java} (Microsoft)
+    \item \textbf{Spring Boot Extension Pack} (VMware / Spring)
+  \end{enumerate}
+
+  \vspace{0.6em}
+  Espere terminar o download (pode demorar um pouco na primeira vez).
+
+  \vspace{0.4em}
+  \begin{alertblock}{Dica}
+    Reinicie o VS Code depois de instalar as extensões.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Preciso instalar Maven separado?}
+  \textbf{Não necessariamente.}
+
+  \vspace{0.5em}
+  Os projetos Spring Boot vêm com o \textbf{Maven Wrapper}:
+
+  \begin{itemize}
+    \item No Windows: \texttt{mvnw.cmd}
+    \item Ele baixa o Maven automaticamente na primeira execução
+  \end{itemize}
+
+  \vspace{0.6em}
+  \begin{block}{Tradução}
+    Vocês digitam um comando na pasta do projeto.\\
+    O próprio projeto cuida do Maven.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Checkpoint --- estamos prontos?}
+  Antes do primeiro projeto, confirme:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item [ ] \texttt{java -version} mostra 21 (ou 17+)
+    \item [ ] VS Code abre normalmente
+    \item [ ] Extension Pack for Java instalado
+    \item [ ] Spring Boot Extension Pack instalado
+  \end{itemize}
+
+  \vspace{0.8em}
+  Se algum item falhou: \textbf{chame o professor agora}.\\
+  Não siga adiante “no escuro”.
+\end{frame}
+
+% #############################################################################
+\section{Primeiro projeto (juntos)}
+
+% =============================================================================
+\begin{frame}{O que vamos construir juntos}
+  Um projeto chamado \textbf{ola-spring} que:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Sobe um servidor na porta \textbf{8080}
+    \item Responde em \texttt{http://localhost:8080/}
+    \item Responde também em \texttt{http://localhost:8080/ola}
+  \end{enumerate}
+
+  \vspace{0.8em}
+  \begin{block}{Sucesso de hoje}
+    Ver uma frase escrita por vocês no navegador.\\
+    Isso prova que o Spring Boot está vivo na máquina.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo A --- Abrir o Spring Initializr}
+  O site que \textbf{gera o esqueleto} do projeto:
+
+  \vspace{0.4em}
+  \begin{center}
+    \Large \url{https://start.spring.io}
+  \end{center}
+
+  \vspace{0.8em}
+  Pensem nele como um “formulário de pedido”:\\
+  vocês escolhem o que querem, e ele monta a pasta inicial.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo B --- Preencher o formulário}
+  Configure assim (pode ir lendo em voz alta com a turma):
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item \textbf{Project:} Maven
+    \item \textbf{Language:} Java
+    \item \textbf{Spring Boot:} deixe a versão padrão do site
+    \item \textbf{Group:} \texttt{com.entra21}
+    \item \textbf{Artifact:} \texttt{ola-spring}
+    \item \textbf{Name:} \texttt{ola-spring}
+    \item \textbf{Package name:} \texttt{com.entra21.olaspring}
+    \item \textbf{Packaging:} Jar
+    \item \textbf{Java:} 21
+  \end{itemize}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo C --- Adicionar a dependência certa}
+  Em \textbf{Dependencies}, clique em \textbf{ADD DEPENDENCIES} e busque:
+
+  \vspace{0.5em}
+  \begin{center}
+    \Large \textbf{Spring Web}
+  \end{center}
+
+  \vspace{0.5em}
+  Adicione \textbf{só essa} por enquanto.
+
+  \vspace{0.6em}
+  \begin{alertblock}{Por quê?}
+    Sem Spring Web, o projeto nasce --- mas \textbf{não} sobe endpoint HTTP
+    pronto para o navegador do jeito que queremos hoje.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo D --- Gerar e abrir no VS Code}
+  \begin{enumerate}
+    \item Clique em \textbf{GENERATE}
+    \item Baixe o arquivo \texttt{.zip}
+    \item Extraia para uma pasta fácil, por exemplo:\\
+          \texttt{C:\textbackslash{}projetos\textbackslash{}ola-spring}
+    \item No VS Code: \textbf{File $\rightarrow$ Open Folder}
+    \item Selecione a pasta \texttt{ola-spring} (a que contém o \texttt{pom.xml})
+  \end{enumerate}
+
+  \vspace{0.5em}
+  \begin{block}{Armadilha comum}
+    Abrir a pasta \emph{pai} em vez da pasta do projeto.\\
+    O VS Code precisa “enxergar” o \texttt{pom.xml} na raiz aberta.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Passo E --- Olhar a estrutura (sem medo)}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+ola-spring/
+├── pom.xml                 ← dependências (Maven)
+├── mvnw.cmd                ← Maven Wrapper (Windows)
+└── src/main/java/com/entra21/olaspring/
+    └── OlaSpringApplication.java   ← ponto de partida (main)
+\end{lstlisting}
+
+  \vspace{0.5em}
+  Hoje só vamos \textbf{criar mais uma classe}: o Controller.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Passo F --- Criar o OlaController}
+  Na mesma pasta da Application, crie \texttt{OlaController.java}:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+package com.entra21.olaspring;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class OlaController {
+
+  @GetMapping("/")
+  public String home() {
+    return "Ola, Spring Boot! Bem-vindo(a).";
+  }
+
+  @GetMapping("/ola")
+  public String ola() {
+    return "Tudo funcionando!";
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{O que essas anotações significam?}
+  \begin{description}
+    \item[\texttt{@RestController}]
+      “Esta classe recebe pedidos HTTP e devolve resposta.”
+    \item[\texttt{@GetMapping("/ola")}]
+      “Quando alguém acessar \texttt{/ola} com GET, rode este método.”
+  \end{description}
+
+  \vspace{0.8em}
+  \begin{block}{Ponte com Java Web}
+    Isso lembra um Servlet mapeado para uma URL ---\\
+    só que com bem menos “cerimônia”.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Passo G --- Rodar o projeto}
+  No terminal do VS Code (\texttt{Ctrl+''} ou menu Terminal):
+
+\begin{lstlisting}[language=bash]
+.\mvnw.cmd spring-boot:run
+\end{lstlisting}
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item A \textbf{primeira} vez demora (baixa bibliotecas)
+    \item Espere aparecer algo como:\\
+          \texttt{Started OlaSpringApplication}
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Não feche o terminal}
+    Enquanto o servidor estiver rodando, o terminal fica “ocupado”.\\
+    Isso é normal. Para parar: \texttt{Ctrl+C}.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo H --- Testar no navegador}
+  Com o servidor rodando, abra:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \url{http://localhost:8080/}
+    \item \url{http://localhost:8080/ola}
+  \end{itemize}
+
+  \vspace{0.8em}
+  \begin{block}{O que é localhost:8080?}
+    \begin{itemize}
+      \item \textbf{localhost} = este computador
+      \item \textbf{8080} = porta onde o Spring está escutando
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Se algo der errado\ldots}
+  \begin{enumerate}
+    \item Leia a mensagem vermelha do terminal (de baixo para cima)
+    \item Confira se o pacote das classes está igual (\texttt{com.entra21.olaspring})
+    \item Confira se a dependência \textbf{Spring Web} foi adicionada
+    \item Veja se a porta 8080 já está em uso (feche outro Tomcat/Spring)
+    \item Peça ajuda --- mostre a tela do erro
+  \end{enumerate}
+
+  \vspace{0.6em}
+  Erro não é fracasso. Erro é o computador pedindo ajuste.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Fluxo mental do que aconteceu}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center, minimum width=2.6cm,
+                  minimum height=1.0cm, font=\small\bfseries},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (nav) {Navegador\\{\normalfont\tiny localhost:8080}};
+    \node[box, fill=orange!20, right=1.1cm of nav] (boot) {Spring Boot\\{\normalfont\tiny servidor}};
+    \node[box, fill=green!15, right=1.1cm of boot] (ctrl) {OlaController\\{\normalfont\tiny @GetMapping}};
+    \node[box, fill=yellow!25, below=0.9cm of ctrl] (txt) {Texto\\{\normalfont\tiny resposta}};
+
+    \draw[seta] (nav) -- (boot);
+    \draw[seta] (boot) -- (ctrl);
+    \draw[seta] (ctrl) -- (txt);
+    \draw[seta] (txt.west) -| ++(-1.2,0) |- (nav.south);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.6em}
+  Vocês pedem $\rightarrow$ Spring recebe $\rightarrow$ Controller responde $\rightarrow$ navegador mostra.
+\end{frame}
+
+% #############################################################################
+\section{Desafio (sozinhos)}
+
+% =============================================================================
+\begin{frame}{Desafio 01 --- Saudação personalizada}
+  Criem um projeto (pode ser novo no Initializr) com:
+
+  \vspace{0.5em}
+  \begin{block}{Endpoint}
+    \texttt{GET /saudacao?nome=Maria}
+  \end{block}
+
+  \vspace{0.3em}
+  Resposta esperada:
+
+  \begin{center}
+    \texttt{Olá, Maria! Seja bem-vindo(a) ao Spring.}
+  \end{center}
+
+  \vspace{0.5em}
+  Se abrir só \texttt{/saudacao} (sem nome):
+
+  \begin{center}
+    \texttt{Olá, visitante! Seja bem-vindo(a) ao Spring.}
+  \end{center}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Ferramenta nova: @RequestParam}
+  Para ler \texttt{?nome=Maria} da URL:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/saudacao")
+public String saudacao(
+    @RequestParam(required = false) String nome) {
+
+  if (nome == null || nome.isBlank()) {
+    nome = "visitante";
+  }
+  return "Ola, " + nome + "! Seja bem-vindo(a) ao Spring.";
+}
+\end{lstlisting}
+
+  \vspace{0.3em}
+  \begin{itemize}
+    \item \texttt{required = false} permite acessar sem o parâmetro
+    \item O resto é Java que vocês \textbf{já sabem}
+  \end{itemize}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Critérios de aceite do desafio}
+  \begin{itemize}
+    \item [ ] Projeto sobe com \texttt{.\textbackslash{}mvnw.cmd spring-boot:run}
+    \item [ ] \texttt{/saudacao?nome=Ana} mostra Ana
+    \item [ ] \texttt{/saudacao} mostra visitante
+    \item [ ] Vocês explicam, em uma frase, o que \texttt{@GetMapping} faz
+  \end{itemize}
+
+  \vspace{0.8em}
+  \begin{block}{Extra (opcional)}
+    Criar \texttt{/soma?a=2\&b=3} retornando \texttt{5}.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Onde está o material}
+  Tudo no repositório da disciplina:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \texttt{slides/aula-01-introducao/} --- estes slides
+    \item \texttt{ola-spring/} --- projeto feito juntos (consulta)
+    \item \texttt{desafio-saudacao/} --- enunciado do desafio
+  \end{itemize}
+
+  \vspace{0.6em}
+  Usem o projeto da aula como \textbf{gabarito vivo}, não como cópia cega:\\
+  leiam, entendam, adaptem.
+\end{frame}
+
+% #############################################################################
+\section{Recapitulando}
+
+% =============================================================================
+\begin{frame}{O que aprendemos hoje}
+  \begin{enumerate}
+    \item Spring Boot acelera o que já vimos em Java Web
+    \item No Windows: JDK 21 + VS Code + extensões Java/Spring
+    \item O Initializr gera o esqueleto do projeto
+    \item \texttt{@RestController} + \texttt{@GetMapping} respondem no navegador
+    \item Rodamos com \texttt{.\textbackslash{}mvnw.cmd spring-boot:run}
+  \end{enumerate}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Para a próxima aula}
+  \begin{itemize}
+    \item Tragam o JDK e o VS Code já funcionando
+    \item Se puderem, terminem o desafio da saudação
+    \item Na próxima: vamos aprofundar Controllers e organização do código
+  \end{itemize}
+
+  \vspace{1em}
+  \begin{center}
+    \Large Obrigado --- e até a próxima!
+  \end{center}
+\end{frame}
+
+\end{document}
