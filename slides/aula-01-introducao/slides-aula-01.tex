@@ -46,8 +46,8 @@
 
 \title{Aula 01 --- Spring Framework}
 \subtitle{Introdução · Setup no Windows · Primeiro projeto}
-\author{Entra21 --- Trilha Java}
-\institute{Última disciplina da trilha}
+\author{Mauricio Duailibi Neto}
+\institute{Entra21}
 \date{}
 
 \begin{document}
@@ -75,21 +75,6 @@
     do que montar Servlet + Tomcat na mão --- sem apagar o que vocês
     já aprenderam.
   \end{block}
-\end{frame}
-
-% =============================================================================
-\begin{frame}{Como vamos estudar}
-  \begin{itemize}
-    \item Ritmo \textbf{devagar} e com pausas para dúvidas
-    \item Explicações com \textbf{analogias} do dia a dia
-    \item Um único repositório com \textbf{todos os códigos} da disciplina
-    \item Em cada aula: algo feito \textbf{juntos} + um \textbf{desafio} sozinho
-  \end{itemize}
-
-  \vspace{0.8em}
-  \begin{alertblock}{Regra de ouro}
-    Se travou: pare, respire, peça ajuda. Travamento faz parte do processo.
-  \end{alertblock}
 \end{frame}
 
 % =============================================================================
@@ -183,7 +168,7 @@
     \midrule
     Pedido HTTP & Servlet & Controller \\
     Servidor & Tomcat externo & Embutido \\
-    Configuração & muita manual & muita automática \\
+    Configuração & manual & automática \\
     Dependências & Maven (\texttt{pom.xml}) & Maven (\texttt{pom.xml}) \\
     \bottomrule
   \end{tabular}
@@ -208,10 +193,6 @@
   \end{enumerate}
 
   \vspace{0.8em}
-  \begin{alertblock}{Importante}
-    Façam \textbf{juntos} com o professor. Não adianta correr e pular etapa.\\
-    Cada máquina é um pouco diferente --- vamos com calma.
-  \end{alertblock}
 \end{frame}
 
 % =============================================================================
@@ -226,7 +207,7 @@
         \item Architecture: \textbf{x64} (maioria dos PCs)
       \end{itemize}
     \item Baixe o instalador \texttt{.msi} e execute
-    \item Aceite as opções padrão (deixe marcar \textbf{Add to PATH} se aparecer)
+    \item Aceite as opções padrão (marque a opção \textbf{Add to PATH} se aparecer)
   \end{enumerate}
 \end{frame}
 
@@ -678,7 +659,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 \end{frame}
 
 % =============================================================================
-\begin{frame}{Bloco E --- Se sobrar tempo (nível 2)}
+\begin{frame}{Bloco E}
   Para quem terminou os anteriores:
 
   \vspace{0.4em}
@@ -709,6 +690,89 @@ import org.springframework.web.bind.annotation.RequestParam;
 
   \vspace{0.8em}
   Dúvida? Chame o professor --- mostre a URL e a tela do código.
+\end{frame}
+
+% #############################################################################
+\section{PathVariable (nível desafio)}
+
+% =============================================================================
+\begin{frame}{Outro jeito de passar valor na URL}
+  Vocês já usaram \texttt{?nome=Ana} (\texttt{@RequestParam}).
+
+  \vspace{0.5em}
+  Agora o valor vai \textbf{no caminho}:
+
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Query & \texttt{/saudacao?nome=Ana} \\
+    Caminho & \texttt{/saudacao/Ana} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  A anotação é \texttt{@PathVariable}.\\
+  Dá para usar \textbf{um ou vários} pedaços no caminho.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Sintaxe rápida}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/saudacao/{nome}")
+public String saudacao(@PathVariable String nome) {
+  return "Ola, " + nome + "!";
+}
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Import:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+import org.springframework.web.bind.annotation.PathVariable;
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Teste: \texttt{http://localhost:8080/saudacao/Maria}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Desafios PathVariable (na sala)}
+  Três exercícios um pouco mais pesados --- ainda no \texttt{ola-spring}.
+
+  \vspace{0.4em}
+  \begin{enumerate}
+    \item \textbf{\texttt{/calc/\{a\}/\{b\}/\{op\}}}\\
+          Ex.: \texttt{/calc/10/2/div} $\rightarrow$ \texttt{10 / 2 = 5}\\
+          \texttt{op}: \texttt{soma}, \texttt{sub}, \texttt{mult}, \texttt{div}.\\
+          Divisão por zero: mensagem amigável.
+    \item \textbf{\texttt{/usuario/\{id\}/pedidos/\{pedidoId\}}}\\
+          Ex.: \texttt{/usuario/7/pedidos/42}\\
+          $\rightarrow$ \texttt{Usuario 7, pedido 42 encontrado.}
+    \item \textbf{\texttt{/frete/\{peso\}/\{distancia\}} + query}\\
+          Ex.: \texttt{/frete/5/100?urgente=true}\\
+          Regra base: \texttt{preco = peso * distancia * 0.5}\\
+          Se \texttt{urgente=true}, acrescente 20\%.\\
+          Mostre o preço final.
+  \end{enumerate}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Dicas para os 3 desafios}
+  \begin{itemize}
+    \item Vários \texttt{\{...\}} = vários \texttt{@PathVariable}
+    \item No exercício 3, misture:\\
+          \texttt{@PathVariable} + \texttt{@RequestParam boolean urgente}
+    \item Se \texttt{urgente} puder faltar, use\\
+          \texttt{@RequestParam(defaultValue = "false")}
+    \item Reinicie o Spring depois de cada tentativa que salvar
+  \end{itemize}
+
+  \vspace{0.6em}
+  \begin{alertblock}{Meta}
+    Provar que vocês leem a URL, escolhem path ou query,\\
+    e resolvem a lógica em Java --- como no dia a dia de API.
+  \end{alertblock}
 \end{frame}
 
 % #############################################################################
@@ -802,7 +866,8 @@ public String saudacao(
     \item No Windows: JDK 21 + VS Code + extensões Java/Spring
     \item O Initializr gera o esqueleto do projeto
     \item \texttt{@RestController} + \texttt{@GetMapping} respondem no navegador
-    \item \texttt{@RequestParam} lê valores da URL (\texttt{?nome=})
+    \item \texttt{@RequestParam} lê valores depois do \texttt{?}
+    \item \texttt{@PathVariable} lê valores no caminho da URL
     \item Praticamos vários endpoints no \texttt{ola-spring}
   \end{enumerate}
 \end{frame}

@@ -24,7 +24,7 @@ Depois abra o navegador em http://localhost:8080
 
 Para parar: `Ctrl + C` no terminal.
 
-## Como rodar (macOS — professor)
+## Como rodar (macOS / Linux)
 
 ```bash
 ./mvnw spring-boot:run
