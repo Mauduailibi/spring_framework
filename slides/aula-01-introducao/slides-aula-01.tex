@@ -553,6 +553,165 @@ public class OlaController {
 \end{frame}
 
 % #############################################################################
+\section{Exercícios na sala}
+
+% =============================================================================
+\begin{frame}{Hora de praticar --- no ola-spring}
+  Vamos treinar \textbf{no mesmo projeto} \texttt{ola-spring},\\
+  criando novos métodos no \texttt{OlaController}.
+
+  \vspace{0.6em}
+  \begin{block}{Regras de ouro}
+    \begin{enumerate}
+      \item Faça \textbf{um exercício por vez}
+      \item Salve o arquivo
+      \item \textbf{Pare e rode de novo} o Spring (play ou terminal)
+      \item Teste no navegador: \texttt{http://localhost:8080/...}
+    \end{enumerate}
+  \end{block}
+
+  \vspace{0.4em}
+  \begin{alertblock}{Lembrete}
+    Se a resposta no navegador ``não mudou'', quase sempre\\
+    o servidor antigo ainda está rodando.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Bloco A --- Aquecimento}
+  Ainda sem parâmetro --- só novos endereços.
+
+  \vspace{0.4em}
+  \begin{enumerate}
+    \item \textbf{\texttt{/ola}} --- altere a mensagem para:\\
+          \texttt{Olá, turma Entra21! Spring na veia.}
+    \item \textbf{\texttt{/turma}} --- devolva o nome da disciplina\\
+          e o nome do polo/cidade (texto livre).
+    \item \textbf{\texttt{/hora}} --- devolva uma frase fixa, por exemplo:\\
+          \texttt{A aula vai até as 22h.}
+  \end{enumerate}
+
+  \vspace{0.6em}
+  Objetivo: criar \texttt{@GetMapping} novos com segurança.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Ferramenta nova: @RequestParam}
+  Para ler valores da URL assim:
+
+  \begin{center}
+    \texttt{http://localhost:8080/saudacao?nome=Ana}
+  \end{center}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/saudacao")
+public String saudacao(@RequestParam String nome) {
+  return "Ola, " + nome + "!";
+}
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Não esqueça do import:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+import org.springframework.web.bind.annotation.RequestParam;
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Bloco B --- Parâmetros na URL (?)}
+  \begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \textbf{\texttt{/saudacao?nome=}}\\
+          Ex.: \texttt{?nome=Ana} $\rightarrow$ \texttt{Olá, Ana!}
+    \item \textbf{\texttt{/dobro?numero=}}\\
+          Ex.: \texttt{?numero=4} $\rightarrow$ \texttt{O dobro de 4 é 8.}\\
+          Use \texttt{int} no \texttt{@RequestParam}.
+    \item \textbf{\texttt{/soma?a=\&b=}}\\
+          Ex.: \texttt{?a=2\&b=3} $\rightarrow$ \texttt{2 + 3 = 5}
+    \item \textbf{\texttt{/media?a=\&b=}} (extra)\\
+          Devolva a média dos dois números.
+  \end{enumerate}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Bloco C --- Decisão (if)}
+  Java que vocês já sabem --- agora dentro do endpoint.
+
+  \vspace{0.4em}
+  \begin{enumerate}
+    \setcounter{enumi}{7}
+    \item \textbf{\texttt{/par-impar?numero=}}\\
+          Par $\rightarrow$ \texttt{4 é par.} \quad
+          Ímpar $\rightarrow$ \texttt{5 é ímpar.}
+    \item \textbf{\texttt{/acesso?idade=}}\\
+          \texttt{idade >= 18} $\rightarrow$ \texttt{Acesso liberado.}\\
+          senão $\rightarrow$ \texttt{Acesso negado.}
+    \item \textbf{\texttt{/desconto?valor=}}\\
+          Se \texttt{valor >= 100}: 10\% de desconto e mostre o valor final.\\
+          Senão: \texttt{Sem desconto. Valor: ...}
+  \end{enumerate}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Bloco D --- Parâmetro opcional}
+  Às vezes a pessoa acessa \textbf{sem} enviar o parâmetro.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@RequestParam(required = false) String nome
+\end{lstlisting}
+
+  \vspace{0.4em}
+  \begin{enumerate}
+    \setcounter{enumi}{10}
+    \item \textbf{\texttt{/bemvindo}}
+      \begin{itemize}
+        \item Com \texttt{?nome=Joao} $\rightarrow$
+              \texttt{Bem-vindo(a), Joao!}
+        \item Sem nome $\rightarrow$
+              \texttt{Bem-vindo(a), visitante!}
+      \end{itemize}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  Este exercício é o ``ensaio'' do desafio de casa.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Bloco E --- Se sobrar tempo (nível 2)}
+  Para quem terminou os anteriores:
+
+  \vspace{0.4em}
+  \begin{enumerate}
+    \setcounter{enumi}{11}
+    \item \textbf{\texttt{/calc?a=\&b=\&op=}}\\
+          \texttt{op} = \texttt{soma}, \texttt{sub}, \texttt{mult} ou \texttt{div}.\\
+          Se dividir por zero: mensagem amigável (não deixe quebrar).
+    \item \textbf{\texttt{/eco?texto=\&vezes=}}\\
+          Repita o texto N vezes (uma frase por linha, usando \texttt{\textbackslash n}).
+  \end{enumerate}
+
+  \vspace{0.6em}
+  \begin{block}{Meta da prática}
+    Pedido na URL $\rightarrow$ Java processa $\rightarrow$ texto devolve no navegador.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Checklist rápido (se travar)}
+  \begin{itemize}
+    \item [ ] O método está dentro de uma classe com \texttt{@RestController}?
+    \item [ ] O caminho do \texttt{@GetMapping} está igual ao da URL?
+    \item [ ] Importei \texttt{RequestParam}?
+    \item [ ] Reiniciei o Spring depois de salvar?
+    \item [ ] Li o erro vermelho do terminal (de baixo para cima)?
+  \end{itemize}
+
+  \vspace{0.8em}
+  Dúvida? Chame o professor --- mostre a URL e a tela do código.
+\end{frame}
+
+% #############################################################################
 \section{Desafio (sozinhos)}
 
 % =============================================================================
@@ -580,8 +739,8 @@ public class OlaController {
 \end{frame}
 
 % =============================================================================
-\begin{frame}[fragile]{Ferramenta nova: @RequestParam}
-  Para ler \texttt{?nome=Maria} da URL:
+\begin{frame}[fragile]{Desafio --- lembrete do @RequestParam}
+  É o mesmo ideia do exercício \texttt{/bemvindo}, em projeto próprio:
 
 \begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
 @GetMapping("/saudacao")
@@ -598,7 +757,7 @@ public String saudacao(
   \vspace{0.3em}
   \begin{itemize}
     \item \texttt{required = false} permite acessar sem o parâmetro
-    \item O resto é Java que vocês \textbf{já sabem}
+    \item Faça \textbf{sozinho} (pode consultar os exercícios da aula)
   \end{itemize}
 \end{frame}
 
@@ -643,7 +802,8 @@ public String saudacao(
     \item No Windows: JDK 21 + VS Code + extensões Java/Spring
     \item O Initializr gera o esqueleto do projeto
     \item \texttt{@RestController} + \texttt{@GetMapping} respondem no navegador
-    \item Rodamos com \texttt{.\textbackslash{}mvnw.cmd spring-boot:run}
+    \item \texttt{@RequestParam} lê valores da URL (\texttt{?nome=})
+    \item Praticamos vários endpoints no \texttt{ola-spring}
   \end{enumerate}
 \end{frame}
 
