@@ -1,0 +1,1487 @@
+% =============================================================================
+% Aula 02 — HTML/JS estático + API JSON · Projeto StockSales
+% Beamer + tema Madrid | Curso Entra21 — Spring Framework
+% Compilar: pdflatex slides-aula-02.tex  (duas vezes se usar TOC)
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit}
+
+% --- Cores e código ---
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codeblue}{RGB}{30,70,160}
+\definecolor{codered}{RGB}{180,50,50}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codered},
+  tabsize=2,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+           {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+           {←}{{$\leftarrow$}}1 {→}{{$\rightarrow$}}1
+}
+
+\title{Aula 02 --- Spring Framework}
+\subtitle{HTML/JS + API JSON · Projeto StockSales}
+\author{Mauricio Duailibi Neto}
+\institute{Turma Java Entra21}
+\date{}
+
+\begin{document}
+
+% =============================================================================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Como será a aula de hoje}
+  Duas partes, com intervalo no meio:
+
+  \vspace{0.8em}
+  \begin{block}{Parte 1 --- 18h30 às 20h}
+    \begin{itemize}
+      \item Revisão da Aula 01
+      \item Estrutura de um projeto Spring Boot
+      \item Como o HTML conversa com o backend
+      \item Exercícios guiados
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.4em}
+  \begin{block}{Parte 2 --- 20h20 às 22h}
+    \begin{itemize}
+      \item Apresentação do projeto do curso: \textbf{StockSales}
+      \item Configuração inicial + primeira página + listar produtos
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Mapa da aula}
+  \tableofcontents
+\end{frame}
+
+% #############################################################################
+\section{Revisão da Aula 01}
+
+% =============================================================================
+\begin{frame}{O que construímos na Aula 01}
+  Na última aula, o foco foi fazer o Spring responder no navegador:
+
+  \vspace{0.6em}
+  \begin{enumerate}
+    \item Instalar JDK 21 + VS Code + extensões
+    \item Gerar um projeto no \texttt{start.spring.io}
+    \item Criar um \texttt{@RestController}
+    \item Responder texto em endereços como \texttt{/} e \texttt{/ola}
+    \item Usar \texttt{@RequestParam}, por exemplo \texttt{/saudacao?nome=Ana}
+  \end{enumerate}
+
+  \vspace{0.6em}
+  \begin{alertblock}{Lembrete}
+    O navegador pede uma URL $\rightarrow$ o Controller responde.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Anotações que precisam ficar na cabeça}
+  \begin{description}
+    \item[\texttt{@RestController}] Diz: ``esta classe recebe pedidos HTTP''.
+    \item[\texttt{@GetMapping("/caminho")}] Diz: ``quando alguém acessar
+      este caminho com GET, rode este método''.
+    \item[\texttt{@RequestParam}] Lê valores da URL depois do \texttt{?},
+      por exemplo \texttt{?nome=Ana}.
+    \item[\texttt{pom.xml}] Lista de dependências do Maven,
+      por exemplo Spring Web.
+  \end{description}
+
+  \vspace{0.6em}
+  Sem isso, o restante da disciplina fica mais difícil.\\
+  Com isso, vocês já conseguem conversar com o servidor.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Fluxo que já vimos}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center, minimum width=2.5cm,
+                  minimum height=1.0cm, font=\small\bfseries},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (nav) {Navegador};
+    \node[box, fill=orange!20, right=1.0cm of nav] (boot) {Spring Boot};
+    \node[box, fill=green!15, right=1.0cm of boot] (ctrl) {Controller};
+    \node[box, fill=yellow!25, below=0.85cm of ctrl] (txt) {Texto\\{\normalfont\tiny resposta}};
+
+    \draw[seta] (nav) -- node[above, font=\tiny]{GET /ola} (boot);
+    \draw[seta] (boot) -- (ctrl);
+    \draw[seta] (ctrl) -- (txt);
+    \draw[seta] (txt.west) -| ++(-1.0,0) |- (nav.south);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.8em}
+  Isso funciona --- mas a resposta era \textbf{texto puro}.\\
+  Hoje vamos dar o próximo passo: \textbf{páginas de verdade}.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{O limite do texto puro}
+  Na Aula 01, o navegador mostrava algo assim:
+
+  \vspace{0.5em}
+  \begin{center}
+    \texttt{Olá, Spring Boot! Bem-vindo à disciplina.}
+  \end{center}
+
+  \vspace{0.8em}
+  Isso é ótimo para aprender o fluxo.\\
+  Mas um sistema real precisa de:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Layout: cores, títulos, botões
+    \item Listas, tabelas, formulários
+    \item Interação: clicar e atualizar a tela
+  \end{itemize}
+
+  \vspace{0.6em}
+  Para isso, usamos \textbf{HTML + CSS + JavaScript}.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Pergunta-guia da Aula 02}
+  \begin{center}
+    \Large
+    Como o navegador mostra uma \textbf{página}\\
+    e, ao mesmo tempo, busca \textbf{dados}\\
+    que vêm do Spring?
+  \end{center}
+
+  \vspace{1.2em}
+  A resposta curta:\\
+  \textbf{HTML/JS estático} + \textbf{API JSON}.
+
+  \vspace{0.8em}
+  Vamos entender isso com calma.
+\end{frame}
+
+% #############################################################################
+\section{Arquitetura de um projeto Spring Boot}
+
+% =============================================================================
+\begin{frame}{Antes de HTML: onde cada coisa mora}
+  Um projeto Spring Boot não é ``um arquivo só''.\\
+  É uma \textbf{casinha organizada}.
+
+  \vspace{0.8em}
+  Se vocês souberem \textbf{onde procurar},\\
+  programar fica muito menos assustador.
+
+  \vspace{0.8em}
+  \begin{block}{Meta deste bloco}
+    Olhar a estrutura de pastas e saber dizer:\\
+    ``isso é código Java'' · ``isso é página'' · ``isso é dependência''.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Estrutura típica do projeto}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+meu-projeto/
+├── pom.xml
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/entra21/...
+│       │       ├── App.java
+│       │       └── ...Controller.java
+│       └── resources/
+│           ├── application.properties
+│           └── static/          ← HTML, CSS, JS
+└── target/                      ← gerado ao compilar
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Hoje a pasta nova mais importante é: \texttt{static/}.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{O que cada pasta faz}
+  \begin{description}
+    \item[\texttt{pom.xml}] ``Lista de compras'' do projeto:
+      quais bibliotecas baixar.
+    \item[\texttt{src/main/java}] Código Java: Controllers, regras, etc.
+    \item[\texttt{src/main/resources}] Configuração e arquivos da aplicação.
+    \item[\texttt{static/}] Páginas e estilos que o navegador baixa:
+      \texttt{.html}, \texttt{.css}, \texttt{.js}, imagens.
+    \item[\texttt{target/}] Resultado da compilação --- \textbf{não editamos}
+      na mão.
+  \end{description}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Duas portas no mesmo servidor}
+  No Spring Boot, o mesmo programa --- porta 8080 --- pode servir:
+
+  \vspace{0.6em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Páginas}
+        \texttt{/}\\
+        \texttt{/index.html}\\
+        \texttt{/css/estilo.css}\\
+        \texttt{/js/app.js}
+      \end{block}
+      Arquivos da pasta \texttt{static/}.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{API --- dados}
+        \texttt{/api/produtos}\\
+        \texttt{/api/clientes}\\
+        \texttt{/api/vendas}
+      \end{block}
+      Métodos do \texttt{@RestController}.
+    \end{column}
+  \end{columns}
+
+  \vspace{0.8em}
+  \begin{alertblock}{Frase de ouro}
+    A página é a \textbf{vitrine}.\\
+    A API é o \textbf{estoque de dados} por trás da vitrine.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Analogia do restaurante}
+  \begin{itemize}
+    \item \textbf{HTML} = o cardápio e a mesa: o que o cliente vê
+    \item \textbf{CSS} = a decoração: cores, fontes, espaçamento
+    \item \textbf{JavaScript} = o garçom: vai à cozinha e traz o pedido
+    \item \textbf{API Spring} = a cozinha: prepara e devolve os dados
+    \item \textbf{JSON} = a bandeja com o prato organizado
+  \end{itemize}
+
+  \vspace{0.8em}
+  O usuário quase nunca ``entra na cozinha''.\\
+  Ele conversa com a interface --- e a interface fala com a API.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Diagrama: página e API juntas}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center, minimum width=2.3cm,
+                  minimum height=0.95cm, font=\small\bfseries},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (nav) {Navegador};
+    \node[box, fill=orange!20, right=1.3cm of nav] (boot) {Spring\\Boot};
+    \node[box, fill=green!20, above right=0.6cm and 1.0cm of boot] (st) {static/\\HTML CSS JS};
+    \node[box, fill=yellow!30, below right=0.6cm and 1.0cm of boot] (api) {Controller\\/api/...};
+
+    \draw[seta] (nav) -- node[above, font=\tiny]{1) GET /} (boot);
+    \draw[seta] (boot) -- (st);
+    \draw[seta] (nav.east) to[bend left=12] node[above, font=\tiny]{2) GET /api/...} (api.west);
+    \draw[seta] (api) -- node[below, font=\tiny]{JSON} (boot);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.9em}
+  \begin{enumerate}
+    \item O navegador baixa a página \texttt{index.html}.
+    \item O JavaScript da página chama a API e recebe dados.
+  \end{enumerate}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Por que separar página e API}
+  Porque isso facilita a vida no dia a dia:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item A tela cuida de mostrar as informações
+    \item O backend cuida de devolver os dados
+    \item Cada parte fica mais fácil de entender e testar
+    \item O mesmo backend pode alimentar várias telas depois
+  \end{itemize}
+
+  \vspace{0.7em}
+  \begin{block}{No nosso curso}
+    Vamos guardar o HTML/CSS/JS na pasta \texttt{static/}\\
+    e os dados nos Controllers em caminhos \texttt{/api/...}.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Classes Java que vão aparecer bastante}
+  \begin{description}
+    \item[Application] Classe com \texttt{main} --- sobe o Spring.
+    \item[Controller] Recebe o pedido HTTP e devolve a resposta.
+    \item[Classe de dados] Representa algo do sistema,
+      por exemplo \texttt{Produto} ou \texttt{Aluno}.
+  \end{description}
+
+  \vspace{0.8em}
+  Hoje: \textbf{Application + Controller + classe de dados + HTML/JS}.\\
+  Sem banco de dados ainda.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{E o banco de dados}
+  \begin{center}
+    \Large Ainda \textbf{não}.
+  \end{center}
+
+  \vspace{0.8em}
+  Nas primeiras aulas do StockSales, os dados ficam\\
+  em uma \textbf{lista na memória} do Java.
+
+  \vspace{0.6em}
+  \begin{itemize}
+    \item Reiniciou o servidor? Os dados voltam ao que estava no código.
+    \item Isso é proposital: aprendemos a API e a tela primeiro.
+    \item Banco entra mais à frente no curso.
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{HTML estático + API JSON}
+
+% =============================================================================
+\begin{frame}{O que é HTML estático no Spring}
+  ``Estático'' aqui significa:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item O arquivo já existe em \texttt{src/main/resources/static/}
+    \item O Spring \textbf{entrega o arquivo} para o navegador
+    \item Não precisamos criar um Controller só para servir o HTML
+  \end{itemize}
+
+  \vspace{0.8em}
+  Exemplos:
+
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Arquivo & URL \\
+    \midrule
+    \texttt{static/index.html} & \texttt{http://localhost:8080/} \\
+    \texttt{static/produtos.html} & \texttt{.../produtos.html} \\
+    \texttt{static/css/estilo.css} & \texttt{.../css/estilo.css} \\
+    \texttt{static/js/app.js} & \texttt{.../js/app.js} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Exemplo mínimo de index.html}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>StockSales</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <h1>StockSales</h1>
+  <p>Bem-vindo ao sistema da turma!</p>
+  <ul id="lista-produtos"></ul>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{O que é JSON}
+  JSON = jeito padrão de \textbf{organizar dados em texto}\\
+  para programas trocarem informação.
+
+  \vspace{0.6em}
+  Parece um objeto Java, mas é texto:
+
+  \vspace{0.4em}
+  \begin{center}
+  \texttt{\{"nome": "Teclado", "preco": 150.0, "estoque": 10\}}
+  \end{center}
+
+  \vspace{0.8em}
+  \begin{itemize}
+    \item Chaves entre aspas: \texttt{"nome"}
+    \item Dois-pontos separa chave e valor
+    \item Texto também entre aspas; números sem aspas
+    \item Lista: \texttt{[ {...}, {...} ]}
+  \end{itemize}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{JSON de uma lista de produtos}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+[
+  {
+    "id": 1,
+    "nome": "Teclado Mecanico",
+    "preco": 250.0,
+    "estoque": 12
+  },
+  {
+    "id": 2,
+    "nome": "Mouse Gamer",
+    "preco": 120.0,
+    "estoque": 30
+  }
+]
+\end{lstlisting}
+
+  O JavaScript sabe ler isso.\\
+  O Spring gera isso a partir dos objetos Java.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{No Java: a classe Produto}
+  Criamos uma classe normal, com atributos e \texttt{get/set}:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Produto {
+  private Long id;
+  private String nome;
+  private double preco;
+  private int estoque;
+
+  public Produto(Long id, String nome,
+                 double preco, int estoque) {
+    this.id = id;
+    this.nome = nome;
+    this.preco = preco;
+    this.estoque = estoque;
+  }
+
+  public Long getId() { return id; }
+  public String getNome() { return nome; }
+  public double getPreco() { return preco; }
+  public int getEstoque() { return estoque; }
+}
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Por que os métodos get}
+  O Spring monta o JSON usando os \texttt{get...}.
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Método Java & Campo no JSON \\
+    \midrule
+    \texttt{getNome()} & \texttt{"nome"} \\
+    \texttt{getPreco()} & \texttt{"preco"} \\
+    \texttt{getEstoque()} & \texttt{"estoque"} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  Sem o \texttt{get}, o campo quase não aparece no JSON.\\
+  Por isso: atributos \texttt{private} + \texttt{get} públicos.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Controller que devolve JSON}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@RestController
+public class ProdutoController {
+
+  @GetMapping("/api/produtos")
+  public List<Produto> listar() {
+    List<Produto> produtos = new ArrayList<>();
+    produtos.add(new Produto(1L, "Teclado", 250.0, 12));
+    produtos.add(new Produto(2L, "Mouse", 120.0, 30));
+    return produtos;
+  }
+}
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Importes que costumam faltar:\\
+  \texttt{import java.util.ArrayList;}\\
+  \texttt{import java.util.List;}
+
+  \vspace{0.3em}
+  Teste: \texttt{http://localhost:8080/api/produtos}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Por que o caminho começa com /api}
+  É uma \textbf{convenção} nossa --- um combinado claro:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \texttt{/api/...} $\rightarrow$ dados em JSON
+    \item \texttt{/}, \texttt{/produtos.html} $\rightarrow$ páginas
+  \end{itemize}
+
+  \vspace{0.8em}
+  Assim ninguém confunde:
+  \begin{itemize}
+    \item ``Estou pedindo a página?''
+    \item ``Ou estou pedindo os dados?''
+  \end{itemize}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Como o JS fala com a API}
+  Precisamos de uma ferramenta no JavaScript que:
+  \begin{enumerate}
+    \item Chame um endereço \texttt{/api/...}
+    \item Receba o JSON
+    \item Entregue esses dados para a gente usar na tela
+  \end{enumerate}
+
+  \vspace{0.7em}
+  No curso vamos usar o \textbf{Axios}.
+
+  \vspace{0.4em}
+  \begin{block}{Em português}
+    Axios = biblioteca pronta para fazer pedidos HTTP\\
+    de um jeito simples e organizado.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Como incluir o Axios na página}
+  Não vamos instalar nada no computador.\\
+  Colocamos o Axios pela internet, com uma tag \texttt{script}:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/js/app.js"></script>
+\end{lstlisting}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Ordem importa}
+    1) Axios primeiro\\
+    2) Nosso \texttt{app.js} depois\\[0.3em]
+    Se inverter, o \texttt{app.js} tenta usar o Axios\\
+    antes dele existir --- e quebra.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Primeiro pedido com Axios}
+  Buscar a lista de produtos:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+axios.get("/api/produtos")
+  .then(function (resposta) {
+    console.log(resposta.data);
+  });
+\end{lstlisting}
+
+  \vspace{0.5em}
+  \begin{description}
+    \item[\texttt{axios.get}] Pede dados com GET.
+    \item[\texttt{resposta.data}] Já vem o JSON convertido.\\
+      Não precisamos chamar \texttt{.json()} na mão.
+  \end{description}
+
+  \vspace{0.4em}
+  \begin{block}{Leitura em voz alta}
+    ``Axios, busca \texttt{/api/produtos}.\\
+    Quando voltar, me mostra \texttt{resposta.data}.''
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Montando a lista na tela}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var ul = document.getElementById("lista-produtos");
+
+axios.get("/api/produtos")
+  .then(function (resposta) {
+    var produtos = resposta.data;
+    ul.innerHTML = "";
+    for (var i = 0; i < produtos.length; i++) {
+      var p = produtos[i];
+      var li = document.createElement("li");
+      li.textContent = p.nome + " - R$ " + p.preco
+        + " - estoque: " + p.estoque;
+      ul.appendChild(li);
+    }
+  });
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Lembra do @RequestParam?}
+  Na Aula 01, o backend já lia parâmetros na URL:
+
+  \vspace{0.4em}
+  \begin{center}
+    \texttt{/saudacao?nome=Ana}
+  \end{center}
+
+  \vspace{0.6em}
+  O \texttt{?} começa a lista de parâmetros.\\
+  O \texttt{\&} separa vários parâmetros:
+
+  \vspace{0.4em}
+  \begin{center}
+    \texttt{/soma?a=2\&b=3}
+  \end{center}
+
+  \vspace{0.6em}
+  Agora vamos aprender a \textbf{enviar} esses parâmetros\\
+  a partir do JavaScript, com Axios.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{O que é ``enviar parâmetros''}
+  Às vezes a API precisa de informação extra, por exemplo:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Qual o \textbf{nome} da pessoa?
+    \item Qual o \textbf{id} do produto?
+    \item Qual o texto da \textbf{busca}?
+  \end{itemize}
+
+  \vspace{0.6em}
+  Esses valores vão na URL, depois do \texttt{?}.
+
+  \vspace{0.5em}
+  \begin{block}{Exemplo}
+    \texttt{/api/saudacao?nome=Ana}\\
+    O parâmetro se chama \texttt{nome}.\\
+    O valor é \texttt{Ana}.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Backend: receber o parâmetro}
+  No Controller, igual à Aula 01:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/saudacao")
+public Mensagem saudacao(
+    @RequestParam String nome) {
+  return new Mensagem("Ola, " + nome + "!");
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Teste manual no navegador:\\
+  \texttt{http://localhost:8080/api/saudacao?nome=Ana}
+
+  \vspace{0.3em}
+  JSON esperado:\\
+  \texttt{\{"texto":"Ola, Ana!"\}}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Jeito 1: colocar na URL na mão}
+  Vocês podem montar a URL juntando texto:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var nome = "Ana";
+
+axios.get("/api/saudacao?nome=" + nome)
+  .then(function (resposta) {
+    console.log(resposta.data.texto);
+  });
+\end{lstlisting}
+
+  \vspace{0.5em}
+  Funciona.\\
+  Mas fica confuso quando tem \textbf{vários} parâmetros.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Jeito 2: objeto params do Axios}
+  O Axios tem um jeito mais organizado:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+axios.get("/api/saudacao", {
+  params: {
+    nome: "Ana"
+  }
+})
+  .then(function (resposta) {
+    console.log(resposta.data.texto);
+  });
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O Axios transforma isso em:\\
+  \texttt{/api/saudacao?nome=Ana}
+
+  \vspace{0.4em}
+  \begin{alertblock}{Usem este jeito}
+    Menos erro de digitação.\\
+    Mais fácil de ler e de acrescentar parâmetros.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Vários parâmetros de uma vez}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+axios.get("/api/soma", {
+  params: {
+    a: 2,
+    b: 3
+  }
+})
+  .then(function (resposta) {
+    console.log(resposta.data);
+  });
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Vira na prática:
+
+  \begin{center}
+    \texttt{/api/soma?a=2\&b=3}
+  \end{center}
+
+  \vspace{0.5em}
+  No Java:
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@RequestParam int a, @RequestParam int b
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Parâmetro vindo de um input}
+  Na página:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+<input id="campo-nome" type="text">
+<button id="btn-saudacao">Saudar</button>
+<p id="saida"></p>
+\end{lstlisting}
+
+  No \texttt{app.js}:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var botao = document.getElementById("btn-saudacao");
+var campo = document.getElementById("campo-nome");
+var saida = document.getElementById("saida");
+
+botao.addEventListener("click", function () {
+  axios.get("/api/saudacao", {
+    params: { nome: campo.value }
+  }).then(function (resposta) {
+    saida.textContent = resposta.data.texto;
+  });
+});
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Lendo o fluxo com calma}
+  \begin{enumerate}
+    \item A pessoa digita \texttt{Ana} no input
+    \item Clica no botão
+    \item Axios chama \texttt{/api/saudacao?nome=Ana}
+    \item O Spring lê \texttt{nome} com \texttt{@RequestParam}
+    \item Devolve JSON: \texttt{\{"texto":"Ola, Ana!"\}}
+    \item O JS pega \texttt{resposta.data.texto} e mostra na tela
+  \end{enumerate}
+
+  \vspace{0.6em}
+  \begin{block}{Frase para lembrar}
+    \texttt{params} no Axios $\leftrightarrow$ \texttt{@RequestParam} no Spring.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{GET com parâmetros $\times$ só GET}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Situação & Exemplo \\
+    \midrule
+    Listar tudo & \texttt{GET /api/produtos} \\
+    Buscar com filtro & \texttt{GET /api/produtos?nome=Mouse} \\
+    Saudação personalizada & \texttt{GET /api/saudacao?nome=Ana} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  Parâmetro na URL = informação \textbf{curta} para filtrar\\
+  ou personalizar a consulta.
+
+  \vspace{0.4em}
+  Mais à frente veremos o \texttt{POST},\\
+  usado para \textbf{enviar dados maiores} e criar registros.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Fluxo completo}
+  \begin{enumerate}
+    \item Usuário abre \texttt{http://localhost:8080/}
+    \item Spring entrega \texttt{index.html}, CSS, Axios e JS
+    \item O JS executa \texttt{axios.get("/api/produtos")}
+    \item Spring roda o método do Controller
+    \item Volta JSON com a lista
+    \item JS cria elementos \texttt{<li>} e mostra na página
+  \end{enumerate}
+
+  \vspace{0.7em}
+  \begin{alertblock}{Aula 02 em uma frase}
+    Página na pasta \texttt{static/} + dados via \texttt{/api/...}.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Ferramenta de detetive: aba Network}
+  No navegador: \textbf{F12} ou botão direito $\rightarrow$ Inspecionar.\\
+  Aba \textbf{Network} / Rede.
+
+  \vspace{0.5em}
+  Vocês conseguem ver:
+  \begin{itemize}
+    \item Se \texttt{index.html} carregou
+    \item Se \texttt{/api/produtos} foi chamado
+    \item Se os parâmetros aparecem na URL
+    \item Qual JSON voltou
+    \item Se deu erro 404 ou 500
+  \end{itemize}
+
+  \vspace{0.6em}
+  \begin{block}{Dica}
+    Antes de pedir ajuda, olhem a aba Network.\\
+    Muitas respostas estão ali.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Erros comuns}
+  \begin{itemize}
+    \item \textbf{axios is not defined} --- esqueceu o
+      \texttt{script} do Axios, ou colocou depois do
+      \texttt{app.js}
+    \item \textbf{Página em branco} --- veja o Console no F12
+    \item \textbf{404} --- caminho do \texttt{@GetMapping}
+      diferente do \texttt{axios.get}
+    \item \textbf{Parâmetro null no Java} --- nome em
+      \texttt{params} diferente do \texttt{@RequestParam}
+    \item \textbf{JSON sem os campos} --- faltou o \texttt{get}
+      na classe
+    \item \textbf{Mudança não apareceu} --- reinicie o Spring
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Exercícios --- Parte 1}
+
+% =============================================================================
+\begin{frame}{Hora de praticar}
+  Vamos montar um \textbf{Painel da Turma} em 4 passos.\\
+  Cada exercício \textbf{completa} o anterior.
+
+  \vspace{0.5em}
+  Usem um projetinho novo no \texttt{start.spring.io}
+  ou o \texttt{ola-spring}.
+
+  \vspace{0.5em}
+  \begin{block}{O que o painel terá no final}
+    \begin{itemize}
+      \item Uma mensagem vinda da API
+      \item Uma lista de alunos vinda da API
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.4em}
+  Salve $\rightarrow$ reinicie o Spring $\rightarrow$ teste.\\
+  Use o navegador e o F12.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Visão geral dos 4 passos}
+  \begin{enumerate}
+    \item Criar a \textbf{página} com os espaços prontos
+          e o script do Axios
+    \item Criar a classe \texttt{Mensagem} e o endpoint
+          \texttt{/api/mensagem}
+    \item Ligar o \textbf{botão} ao \texttt{axios.get} da mensagem
+    \item Criar a classe \texttt{Aluno}, o endpoint
+          \texttt{/api/alunos} e mostrar a lista
+  \end{enumerate}
+
+  \vspace{0.7em}
+  No final, a mesma página usa \textbf{dois} endpoints.\\
+  É o mesmo raciocínio do StockSales.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Exercício 1 --- A página do painel}
+  Criem:
+
+  \vspace{0.3em}
+  \texttt{src/main/resources/static/index.html}\\
+  \texttt{src/main/resources/static/js/app.js} \\
+  {\small\color{black!60}o \texttt{app.js} pode começar vazio}
+
+  \vspace{0.3em}
+  Na página, já deixem estes elementos:
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+<h1>Painel da Turma</h1>
+<button id="btn-mensagem">Buscar mensagem</button>
+<p id="saida">Clique no botao...</p>
+<h2>Alunos</h2>
+<ul id="lista-alunos"></ul>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/js/app.js"></script>
+\end{lstlisting}
+
+  Teste: \texttt{http://localhost:8080/}\\
+  A página abre --- ainda sem dados da API.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Exercício 2 --- Classe Mensagem e API}
+  Criem a classe \texttt{Mensagem} com o atributo \texttt{texto},
+  construtor e \texttt{getTexto()}.
+
+  \vspace{0.3em}
+  No Controller:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/mensagem")
+public Mensagem mensagem() {
+  return new Mensagem("Ola da API Spring!");
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Teste \textbf{ainda no navegador}, sem JS:\\
+  \texttt{http://localhost:8080/api/mensagem}
+
+  \vspace{0.3em}
+  Esperado algo como:\\
+  \texttt{\{"texto":"Ola da API Spring!"\}}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Exercício 3 --- Botão busca a mensagem}
+  Continuando a \textbf{mesma} página do Exercício 1.
+
+  \vspace{0.3em}
+  No \texttt{app.js}:
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var botao = document.getElementById("btn-mensagem");
+var saida = document.getElementById("saida");
+
+botao.addEventListener("click", function () {
+  axios.get("/api/mensagem")
+    .then(function (resposta) {
+      saida.textContent = resposta.data.texto;
+    });
+});
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Clicou $\rightarrow$ a frase da API aparece no parágrafo.
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Exercício 4 --- Lista de alunos}
+  Ainda no \textbf{mesmo} projeto e na \textbf{mesma} página.
+
+  \vspace{0.3em}
+  1) Classe \texttt{Aluno} com \texttt{nome} e \texttt{turma}
+     + construtor + gets\\
+  2) Endpoint:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/alunos")
+public List<Aluno> alunos() {
+  List<Aluno> lista = new ArrayList<>();
+  lista.add(new Aluno("Ana", "Entra21"));
+  lista.add(new Aluno("Bruno", "Entra21"));
+  lista.add(new Aluno("Carla", "Entra21"));
+  return lista;
+}
+\end{lstlisting}
+
+  3) No \texttt{app.js}, ao carregar a página:
+     \texttt{axios.get("/api/alunos")} e preencher
+     \texttt{\#lista-alunos} com \texttt{resposta.data}.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Painel pronto --- o que vocês montaram}
+  Uma única tela, dois pedidos à API:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Clique no botão $\rightarrow$ \texttt{/api/mensagem}
+    \item Ao abrir a página $\rightarrow$ \texttt{/api/alunos}
+  \end{enumerate}
+
+  \vspace{0.7em}
+  \begin{alertblock}{Isso é o ensaio do StockSales}
+    Depois, no projeto do curso, a ideia é a mesma:\\
+    página HTML + Axios + lista vinda do Spring.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Checklist se travar}
+  \begin{itemize}
+    \item [ ] A pasta é \texttt{src/main/resources/static/}?
+    \item [ ] O script do Axios vem \textbf{antes} do \texttt{app.js}?
+    \item [ ] O endpoint começa com \texttt{/api/}?
+    \item [ ] O Controller tem \texttt{@RestController}?
+    \item [ ] A classe de dados tem os métodos \texttt{get}?
+    \item [ ] Os dados estão em \texttt{resposta.data}?
+    \item [ ] Reiniciei o Spring depois de salvar?
+    \item [ ] Olhei o Console e a aba Network no F12?
+  \end{itemize}
+
+  \vspace{0.6em}
+  Dúvida? Chamem o professor --- mostrem a tela do F12.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Intervalo}
+  \begin{center}
+    \Large Até já --- retomamos às \textbf{20h20}\\[0.8em]
+    \normalsize
+    Segunda parte: o projeto \textbf{StockSales}\\
+    O sistema que vamos evoluir até o fim do curso
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{Parte 2 --- O projeto StockSales}
+
+% =============================================================================
+\begin{frame}{Bem-vindos à Parte 2}
+  A partir de agora, quase toda aula terá:
+
+  \vspace{0.6em}
+  \begin{enumerate}
+    \item Um pedaço teórico / exercício curto
+    \item Evolução do \textbf{mesmo projeto}
+  \end{enumerate}
+
+  \vspace{0.8em}
+  Objetivo: sentir como é trabalhar em um sistema\\
+  de verdade, desde o começo até login, vendas e banco.
+
+  \vspace{0.6em}
+  \begin{alertblock}{Nome do projeto}
+    \textbf{StockSales} --- vendas com controle de estoque.
+  \end{alertblock}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Que problema o StockSales resolve}
+  Imaginem uma loja simples:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Tem \textbf{produtos} com preço e quantidade em estoque
+    \item Tem \textbf{clientes} cadastrados
+    \item Registra \textbf{vendas}
+    \item Quando vende, o \textbf{estoque precisa baixar}
+  \end{itemize}
+
+  \vspace{0.7em}
+  Esse tipo de sistema aparece bastante em empresas:\\
+  loja, estoque, atendimento, sistemas internos.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{As três ideias centrais}
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Produto}
+        Nome\\
+        Preço\\
+        Estoque
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Cliente}
+        Nome\\
+        E-mail\\
+        Telefone
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Venda}
+        Cliente\\
+        Itens\\
+        Total\\
+        Data
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.9em}
+  A parte mais interessante:\\
+  \textbf{vender} $\rightarrow$ \textbf{estoque diminui}.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Regra de ouro do estoque}
+  Ao confirmar uma venda:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Verificar se todo item tem estoque suficiente
+    \item Se \textbf{faltar} estoque em qualquer item:\\
+          \textbf{recusar a venda inteira}
+    \item Se estiver ok: gravar a venda e diminuir o estoque
+  \end{enumerate}
+
+  \vspace{0.7em}
+  \begin{alertblock}{Importante}
+    Não vendemos ``metade''.\\
+    Ou a venda fecha toda, ou não fecha.
+  \end{alertblock}
+
+  Essa regra será implementada em aulas futuras.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Telas que o sistema terá}
+  \begin{enumerate}
+    \item \textbf{Home} --- resumo do sistema
+    \item \textbf{Produtos} --- listar e depois cadastrar/editar
+    \item \textbf{Clientes} --- cadastro de clientes
+    \item \textbf{Nova venda} --- escolher cliente + produtos
+    \item \textbf{Histórico de vendas}
+    \item \textbf{Login}
+    \item \textbf{Relatórios} --- totais, estoque baixo
+  \end{enumerate}
+
+  \vspace{0.5em}
+  \begin{block}{Hoje}
+    Só a base: projeto no ar + home + \textbf{listar produtos}.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Mapa das próximas aulas}
+  \begin{center}
+  \begin{tabular}{cl}
+    \toprule
+    Aula & Foco no StockSales \\
+    \midrule
+    2 & Projeto + página + listar produtos \\
+    3 & CRUD produtos e clientes \\
+    4 & Vendas + baixa de estoque \\
+    5 & Organização do código e validação \\
+    6 & Banco de dados \\
+    7 & Autenticação / login \\
+    8 & Perfis: admin e vendedor \\
+    9 & Relatórios, busca, estoque baixo \\
+    10 & Fechamento + desafio final \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Arquitetura que vamos usar}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center, minimum width=2.8cm,
+                  minimum height=1.05cm, font=\small\bfseries},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (front) {HTML + CSS + JS\\{\normalfont\tiny static/}};
+    \node[box, fill=green!15, right=1.4cm of front] (api) {API JSON\\{\normalfont\tiny /api/...}};
+    \node[box, fill=yellow!25, right=1.4cm of api] (dados) {Dados\\{\normalfont\tiny memória depois banco}};
+
+    \draw[seta] (front) -- node[above, font=\tiny]{Axios} (api);
+    \draw[seta] (api) -- (dados);
+    \draw[seta] (dados.south) -- ++(0,-0.55) -| node[below, font=\tiny, pos=0.25]{JSON} (front.south);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.8em}
+  Página na \texttt{static/}. Dados no Controller. JSON no meio.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{API inicial de hoje}
+  Hoje precisamos de \textbf{um} endpoint:
+
+  \vspace{0.6em}
+  \begin{center}
+    \Large \texttt{GET /api/produtos}
+  \end{center}
+
+  \vspace{0.8em}
+  Resposta: lista JSON de produtos\\
+  com id, nome, preço e estoque.
+
+  \vspace{0.6em}
+  Nas próximas aulas entram criação, edição, exclusão,
+  clientes, vendas e login.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{O que não vamos fazer hoje}
+  Para não misturar demais:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Cadastro e edição de produtos --- Aula 3
+    \item Clientes e vendas
+    \item Banco de dados
+    \item Login / senha
+    \item Layout muito elaborado
+  \end{itemize}
+
+  \vspace{0.6em}
+  \begin{block}{Meta da noite}
+    StockSales sobe.\\
+    Home abre.\\
+    Produtos aparecem vindo da API.
+  \end{block}
+\end{frame}
+
+% #############################################################################
+\section{Mão na massa --- StockSales}
+
+% =============================================================================
+\begin{frame}{Passo 1 --- Criar o projeto}
+  Em \texttt{https://start.spring.io}:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item \textbf{Project:} Maven
+    \item \textbf{Language:} Java
+    \item \textbf{Spring Boot:} versão padrão do site
+    \item \textbf{Group:} \texttt{com.entra21}
+    \item \textbf{Artifact:} \texttt{stocksales}
+    \item \textbf{Package:} \texttt{com.entra21.stocksales}
+    \item \textbf{Packaging:} Jar
+    \item \textbf{Java:} 21
+    \item \textbf{Dependency:} Spring Web
+  \end{itemize}
+
+  Gerar, baixar, extrair, abrir no VS Code.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo 2 --- Pasta do frontend}
+  Criem:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \texttt{src/main/resources/static/index.html}
+    \item \texttt{src/main/resources/static/css/estilo.css}
+    \item \texttt{src/main/resources/static/js/app.js}
+  \end{itemize}
+
+  \vspace{0.5em}
+  Na \texttt{index.html}, não esqueçam:
+  \begin{itemize}
+    \item Título \textbf{StockSales}
+    \item Uma lista para os produtos
+    \item Script do \textbf{Axios} antes do \texttt{app.js}
+  \end{itemize}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Passo 3 --- Classe Produto}
+  Pacote: \texttt{com.entra21.stocksales}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Produto {
+  private Long id;
+  private String nome;
+  private double preco;
+  private int estoque;
+
+  public Produto(Long id, String nome,
+                 double preco, int estoque) {
+    this.id = id;
+    this.nome = nome;
+    this.preco = preco;
+    this.estoque = estoque;
+  }
+
+  public Long getId() { return id; }
+  public String getNome() { return nome; }
+  public double getPreco() { return preco; }
+  public int getEstoque() { return estoque; }
+}
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}[fragile]{Passo 4 --- ProdutoController}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@RestController
+public class ProdutoController {
+
+  @GetMapping("/api/produtos")
+  public List<Produto> listar() {
+    List<Produto> produtos = new ArrayList<>();
+    produtos.add(new Produto(1L, "Teclado Mecanico", 250.0, 12));
+    produtos.add(new Produto(2L, "Mouse Gamer", 120.0, 30));
+    produtos.add(new Produto(3L, "Monitor 24", 900.0, 8));
+    produtos.add(new Produto(4L, "Headset", 199.9, 15));
+    return produtos;
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Passo 5 --- JS consome /api/produtos}
+  No \texttt{app.js}:
+  \begin{enumerate}
+    \item Selecionar a lista da página
+    \item \texttt{axios.get("/api/produtos")}
+    \item Usar \texttt{resposta.data}
+    \item Para cada produto, criar um item na tela
+          com nome, preço e estoque
+  \end{enumerate}
+
+  \vspace{0.6em}
+  Testem também a API direto:\\
+  \texttt{http://localhost:8080/api/produtos}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Como vamos trabalhar daqui pra frente}
+  \begin{itemize}
+    \item Mesmo projeto toda segunda parte da aula
+    \item Cada aula acrescenta uma fatia nova
+    \item Evitem apagar o que já funciona --- evoluam
+    \item Salvemos com frequência
+  \end{itemize}
+
+  \vspace{0.7em}
+  \begin{block}{Ideia}
+    Vocês não estão fazendo exercício solto.\\
+    Estão construindo um produto, aula após aula.
+  \end{block}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Roteiro sugerido até as 22h}
+  \begin{enumerate}
+    \item Criar o projeto no start.spring.io
+    \item Subir e testar que o servidor responde
+    \item Criar \texttt{index.html} + CSS mínimo
+    \item Criar \texttt{Produto} + \texttt{ProdutoController}
+    \item Testar o JSON no navegador
+    \item Ligar o Axios e listar na home
+  \end{enumerate}
+
+  \vspace{0.5em}
+  Se travarem no meio: peçam ajuda cedo.
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Critérios de aceite}
+  Vocês fecharam a Aula 02 se:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item [ ] O StockSales sobe sem erro
+    \item [ ] \texttt{/} mostra a página do sistema
+    \item [ ] \texttt{/api/produtos} devolve JSON
+    \item [ ] A home lista os produtos via Axios
+    \item [ ] Vocês conseguem explicar:\\
+              ``a página vem do static; os dados vêm da API''
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Recapitulando}
+
+% =============================================================================
+\begin{frame}{O que aprendemos hoje}
+  \begin{enumerate}
+    \item Estrutura de um projeto Spring Boot
+    \item Diferença entre \textbf{página} e \textbf{API}
+    \item JSON como formato de dados
+    \item Classe Java com \texttt{get} virando JSON
+    \item Axios no JavaScript para consumir a API
+    \item Como enviar parâmetros com \texttt{params}
+    \item Nascimento do projeto \textbf{StockSales}
+  \end{enumerate}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Frases para levar}
+  \begin{itemize}
+    \item A pasta \texttt{static/} guarda a vitrine: HTML/CSS/JS.
+    \item A API \texttt{/api/...} entrega dados em JSON.
+    \item O JavaScript, com Axios, é a ponte entre a tela e o Spring.
+    \item \texttt{params} no Axios conversa com \texttt{@RequestParam}.
+    \item Sem banco ainda: lista em memória está ok.
+    \item O StockSales vai crescer até o fim do curso.
+  \end{itemize}
+\end{frame}
+
+% =============================================================================
+\begin{frame}{Na próxima aula}
+  \begin{block}{Aula 03}
+    \begin{itemize}
+      \item CRUD completo de \textbf{produtos}
+      \item CRUD de \textbf{clientes}
+      \item Novas telas e formulários
+      \item Ainda em memória, sem banco
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.8em}
+  Tragam o StockSales funcionando, com listagem de produtos.\\
+  Qualquer dúvida de hoje, anotem --- começamos revisando.
+\end{frame}
+
+% =============================================================================
+\begin{frame}
+  \begin{center}
+    \Huge Obrigado!\\[0.8em]
+    \Large Agora é mão na massa no StockSales.\\[1.2em]
+    \normalsize Mauricio Duailibi Neto\\
+    Turma Java Entra21
+  \end{center}
+\end{frame}
+
+\end{document}
