@@ -1,0 +1,1122 @@
+% =============================================================================
+% Aula 03 — CRUD · Formulários · Projeto StockSales
+% Beamer + tema Madrid | Curso Entra21 — Spring Framework
+% Compilar: tectonic -X compile slides-aula-03.tex
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codeblue}{RGB}{30,70,160}
+\definecolor{codered}{RGB}{180,50,50}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codered},
+  tabsize=2,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+           {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+}
+
+\newcommand{\onde}[1]{%
+  \begin{block}{Onde estamos}
+    #1
+  \end{block}
+}
+
+\title{Aula 03 --- Spring Framework}
+\subtitle{CRUD · Formulários · StockSales}
+\author{Mauricio Duailibi Neto}
+\institute{Turma Java Entra21}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Como será a aula de hoje}
+  \begin{block}{Parte 1 --- 18h30 às 20h}
+    \begin{itemize}
+      \item Revisão rápida da Aula 02
+      \item Como funciona uma requisição HTTP
+      \item CRUD: cadastrar, listar, editar e excluir
+      \item Projeto novo: \textbf{cadastro-alunos} --- fazemos juntos
+      \item Desafios no mesmo projeto
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.4em}
+  \begin{block}{Parte 2 --- 20h20 às 22h}
+    \begin{itemize}
+      \item Voltamos ao \textbf{StockSales}
+      \item CRUD de produtos e de clientes
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Dois projetos nesta aula}
+  Não vamos misturar os códigos.
+
+  \vspace{0.6em}
+  \begin{description}
+    \item[cadastro-alunos] Projeto \textbf{novo}, só desta primeira parte.
+      Aqui aprendemos CRUD com um cadastro simples de alunos.
+    \item[StockSales] O sistema da loja, que já existe.
+      Usamos na segunda parte, depois do intervalo.
+  \end{description}
+
+  \vspace{0.6em}
+  Quando aparecer um código, o slide vai dizer:\\
+  \textbf{qual projeto} e \textbf{qual arquivo} estamos mexendo.
+\end{frame}
+
+\begin{frame}{Mapa da aula}
+  \tableofcontents
+\end{frame}
+
+% #############################################################################
+\section{Revisão da Aula 02}
+
+\begin{frame}{O que já sabemos}
+  \begin{itemize}
+    \item Criar um projeto no \texttt{start.spring.io}
+    \item Página HTML fica em \texttt{src/main/resources/static/}
+    \item Dados vêm de um Controller, em JSON
+    \item O JavaScript busca esses dados com \texttt{axios.get}
+  \end{itemize}
+
+  \vspace{0.7em}
+  No StockSales, a tela de produtos \textbf{só lista}.\\
+  Ainda não dá para cadastrar, alterar nem apagar.
+\end{frame}
+
+\begin{frame}{Página e API}
+  O Spring atende dois tipos de pedido:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \textbf{Página:} \texttt{/} ou \texttt{/produtos.html}\\
+          --- o arquivo HTML da pasta \texttt{static/}
+    \item \textbf{API:} \texttt{/api/produtos}\\
+          --- o método Java do Controller, devolvendo JSON
+  \end{itemize}
+
+  \vspace{0.6em}
+  A pessoa vê a página.\\
+  A página pede os dados para a API.
+\end{frame}
+
+% #############################################################################
+\section{O que é uma requisição}
+
+\begin{frame}{Navegador e servidor conversam}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center, minimum width=3.2cm,
+                  minimum height=1.2cm, font=\small\bfseries},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (nav) {Navegador\\{\normalfont\small a tela}};
+    \node[box, fill=orange!20, right=3.2cm of nav] (srv) {Spring\\{\normalfont\small o servidor}};
+    \draw[seta] ([yshift=4pt]nav.east) -- node[above, font=\small]{pedido} ([yshift=4pt]srv.west);
+    \draw[seta] ([yshift=-4pt]srv.west) -- node[below, font=\small]{resposta} ([yshift=-4pt]nav.east);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.9em}
+  Cada clique que busca ou grava dados faz um \textbf{pedido}.\\
+  O servidor devolve uma \textbf{resposta}.
+
+  \vspace{0.4em}
+  Esse pedido se chama \textbf{requisição HTTP}.
+\end{frame}
+
+\begin{frame}{Uma requisição tem três partes principais}
+  Pensem numa carta:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item \textbf{O que você quer fazer} --- o verbo:\\
+          GET, POST, PUT ou DELETE
+    \item \textbf{Para onde} --- o endereço:\\
+          \texttt{http://localhost:8080/api/alunos}
+    \item \textbf{O conteúdo} --- o \textbf{corpo} da carta, se houver:\\
+          os dados em JSON
+  \end{enumerate}
+
+  \vspace{0.6em}
+  GET quase nunca leva conteúdo.\\
+  POST e PUT quase sempre levam.
+\end{frame}
+
+\begin{frame}{GET: só pergunta}
+  Exemplo: listar alunos.
+
+  \vspace{0.5em}
+  \begin{block}{Pedido que o navegador manda}
+    \begin{itemize}
+      \item Verbo: \texttt{GET}
+      \item Endereço: \texttt{/api/alunos}
+      \item Corpo: \textit{vazio} --- não precisa enviar dados
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.3em}
+  \begin{block}{Resposta que o Spring devolve}
+    \begin{itemize}
+      \item Status: \texttt{200} --- deu certo
+      \item Corpo: a lista em JSON
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{POST: envia dados no corpo}
+  Exemplo: cadastrar a aluna Ana.
+
+  \vspace{0.3em}
+  \begin{block}{Pedido}
+    \begin{itemize}
+      \item Verbo: \texttt{POST}
+      \item Endereço: \texttt{/api/alunos}
+      \item Corpo:
+    \end{itemize}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{"nome": "Ana", "turma": "Entra21"}
+\end{lstlisting}
+  \end{block}
+
+  \vspace{0.2em}
+  \begin{block}{Resposta}
+    Status \texttt{200} e o aluno já com \texttt{id}, em JSON.
+  \end{block}
+\end{frame}
+
+\begin{frame}{O que é o corpo --- o body}
+  \textbf{Corpo} = o recado que vai \textbf{dentro} do pedido,\\
+  não na URL.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Na Aula 02, o nome ia na URL:\\
+          \texttt{/api/saudacao?nome=Ana}
+    \item Hoje, no cadastro, nome e turma vão \textbf{dentro}\\
+          do pedido, em JSON. Isso é o corpo.
+  \end{itemize}
+
+  \vspace{0.5em}
+  A URL diz \textit{para quem} estamos falando
+  \texttt{/api/alunos}.\\
+  O corpo diz \textit{o que} queremos gravar.
+\end{frame}
+
+\begin{frame}{O Axios monta essa carta para a gente}
+  Quando escrevemos no JavaScript:
+
+  \vspace{0.4em}
+  \begin{center}
+    \texttt{axios.post("/api/alunos", \{ nome: "Ana", turma: "Entra21" \})}
+  \end{center}
+
+  \vspace{0.6em}
+  O Axios faz, por baixo:
+  \begin{enumerate}
+    \item Verbo \texttt{POST}
+    \item Endereço \texttt{/api/alunos}
+    \item Corpo = aquele objeto, transformado em JSON
+  \end{enumerate}
+
+  \vspace{0.5em}
+  No Java, \texttt{@RequestBody} significa:\\
+  ``pega o JSON que veio no corpo e monta um objeto''.
+\end{frame}
+
+\begin{frame}{Como ver isso no navegador}
+  Apertem \textbf{F12} $\rightarrow$ aba \textbf{Network} / Rede.
+
+  \vspace{0.5em}
+  Cliquem na linha do pedido \texttt{alunos}:
+  \begin{itemize}
+    \item \textbf{Headers} --- verbo e endereço
+    \item \textbf{Payload} ou \textbf{Request} --- o corpo que
+          \textbf{mandamos}
+    \item \textbf{Response} --- o corpo que o Spring \textbf{devolveu}
+  \end{itemize}
+
+  \vspace{0.6em}
+  Sempre que algo ``não gravar'', olhem essa aba\\
+  antes de mudar o código de novo.
+\end{frame}
+
+% #############################################################################
+\section{CRUD}
+
+\begin{frame}{As quatro ações de um cadastro}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Ação & Verbo HTTP & Exemplo \\
+    \midrule
+    Listar / ler & GET & Ver os alunos \\
+    Cadastrar & POST & Incluir a Ana \\
+    Editar & PUT & Trocar a turma da Ana \\
+    Excluir & DELETE & Apagar a Ana \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  CRUD é só o nome disso:\\
+  Create, Read, Update, Delete.
+\end{frame}
+
+\begin{frame}{A lista precisa ser a mesma o tempo todo}
+  Imaginem um caderno de chamada.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item GET = ler o caderno
+    \item POST = escrever um nome novo \textbf{nesse} caderno
+    \item PUT = corrigir um nome
+    \item DELETE = apagar um nome
+  \end{itemize}
+
+  \vspace{0.6em}
+  Se a cada leitura vocês pegam um caderno novo em branco,\\
+  o nome que acabaram de escrever some.
+
+  \vspace{0.4em}
+  No código, o caderno é a \textbf{lista}.\\
+  Ela precisa ficar \textbf{na classe do Controller},\\
+  não dentro do método que lista.
+\end{frame}
+
+\begin{frame}[fragile]{Errado: lista dentro do método}
+  Cada GET cria uma lista nova e joga fora no fim.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/alunos")
+public List<Aluno> listar() {
+  List<Aluno> lista = new ArrayList<>();
+  lista.add(new Aluno(1, "Ana", "Entra21"));
+  return lista;
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O POST até pode adicionar um aluno\ldots\\
+  mas no próximo GET essa lista já não existe.
+\end{frame}
+
+\begin{frame}[fragile]{Certo: lista na classe, métodos só usam}
+  A lista continua \textbf{no Controller}.\\
+  Só sai de \textbf{dentro da função} e vira campo da classe.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@RestController
+public class AlunoController {
+
+  private List<Aluno> alunos = new ArrayList<>();
+
+  @GetMapping("/api/alunos")
+  public List<Aluno> listar() {
+    return alunos;
+  }
+}
+\end{lstlisting}
+
+  GET, POST, PUT e DELETE mexem nessa \textbf{mesma} lista.
+\end{frame}
+
+% #############################################################################
+\section{Projeto cadastro-alunos}
+
+\begin{frame}{Vamos criar um projeto novo}
+  Primeira parte da aula: projeto \textbf{cadastro-alunos}.
+
+  \vspace{0.5em}
+  Serve para treinar CRUD com calma,\\
+  e relembrar o \texttt{start.spring.io}.
+
+  \vspace{0.6em}
+  \begin{block}{O que esse projeto vai ter no final da Parte 1}
+    Uma página com formulário e lista de alunos.\\
+    Dá para cadastrar. Editar e excluir ficam nos desafios.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Passo 1 --- Gerar o projeto}
+  Entrem em \texttt{https://start.spring.io}
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Project: Maven \quad Language: Java
+    \item Group: \texttt{com.entra21}
+    \item Artifact: \texttt{cadastro-alunos}
+    \item Package name: \texttt{com.entra21.cadastro}
+    \item Packaging: Jar \quad Java: 21
+    \item Dependency: \textbf{Spring Web}
+  \end{itemize}
+
+  \vspace{0.4em}
+  Generate $\rightarrow$ baixem $\rightarrow$ extraiam $\rightarrow$ abram a pasta
+  no VS Code.
+\end{frame}
+
+\begin{frame}{Passo 2 --- Conferir se sobe}
+  No terminal, dentro da pasta do projeto:
+
+  \vspace{0.4em}
+  \texttt{./mvnw spring-boot:run}\\
+  {\small No Windows: \texttt{.\textbackslash mvnw.cmd spring-boot:run}}
+
+  \vspace{0.5em}
+  Se aparecer que o servidor está na porta 8080, está ok.\\
+  Por enquanto não tem página nossa --- isso é o próximo passo.
+
+  \vspace{0.5em}
+  \begin{alertblock}{Dois Spring ao mesmo tempo}
+    Se o StockSales ainda estiver rodando, a porta 8080
+    já está ocupada. Parem o outro antes.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Quais arquivos vamos criar}
+  Projeto: \textbf{cadastro-alunos}
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Arquivo & Para quê \\
+    \midrule
+    \texttt{Aluno.java} & Os dados de um aluno \\
+    \texttt{AlunoController.java} & A API: listar e cadastrar \\
+    \texttt{static/index.html} & A página \\
+    \texttt{static/js/app.js} & O JavaScript da página \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  A classe \texttt{Application} o site já criou.\\
+  Não precisamos mexer nela.
+\end{frame}
+
+\begin{frame}[fragile]{Onde cada arquivo fica}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+cadastro-alunos/
+  src/main/java/com/entra21/cadastro/
+    CadastroAlunosApplication.java   (ja existe)
+    Aluno.java                       (vamos criar)
+    AlunoController.java             (vamos criar)
+  src/main/resources/static/
+    index.html                       (vamos criar)
+    js/app.js                        (vamos criar)
+\end{lstlisting}
+
+  Java fica em \texttt{java/}.\\
+  Página e JS ficam em \texttt{resources/static/}.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 3 --- Classe Aluno}
+  \onde{Projeto \textbf{cadastro-alunos}\\
+        Pasta \texttt{src/main/java/com/entra21/cadastro/}\\
+        Arquivo novo: \texttt{Aluno.java}}
+
+  Esta classe só guarda dados: id, nome e turma.\\
+  Ainda não é a API.
+\end{frame}
+
+\begin{frame}[fragile]{Aluno.java --- atributos e construtores}
+  \onde{\texttt{Aluno.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+package com.entra21.cadastro;
+
+public class Aluno {
+  private int id;
+  private String nome;
+  private String turma;
+
+  public Aluno() {
+  }
+
+  public Aluno(int id, String nome, String turma) {
+    this.id = id;
+    this.nome = nome;
+    this.turma = turma;
+  }
+}
+\end{lstlisting}
+
+  O construtor vazio é obrigatório para o POST funcionar.\\
+  Completem os \texttt{get} e \texttt{set} dos três atributos.
+\end{frame}
+
+\begin{frame}{Por que dois construtores}
+  \begin{itemize}
+    \item \texttt{Aluno()} --- o Spring usa quando chega um JSON.
+          Ele cria o objeto vazio e chama os \texttt{set}.
+    \item \texttt{Aluno(id, nome, turma)} --- nós usamos para
+          colocar Ana, Bruno e Carla na lista inicial.
+  \end{itemize}
+
+  \vspace{0.6em}
+  Sem o construtor vazio, o cadastro costuma quebrar\\
+  com erro no terminal.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 4 --- Começar o Controller}
+  \onde{Projeto \textbf{cadastro-alunos}\\
+        Mesma pasta do \texttt{Aluno.java}\\
+        Arquivo novo: \texttt{AlunoController.java}}
+
+  Aqui fica a API. E aqui fica a lista ---\\
+  \textbf{na classe}, não dentro do método \texttt{listar}.
+\end{frame}
+
+\begin{frame}[fragile]{AlunoController.java --- a lista}
+  \onde{\texttt{AlunoController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+package com.entra21.cadastro;
+
+@RestController
+public class AlunoController {
+
+  private List<Aluno> alunos = new ArrayList<>();
+  private int proximoId = 1;
+
+  public AlunoController() {
+    alunos.add(new Aluno(1, "Ana", "Entra21"));
+    alunos.add(new Aluno(2, "Bruno", "Entra21"));
+    alunos.add(new Aluno(3, "Carla", "Entra21"));
+    proximoId = 4;
+  }
+}
+\end{lstlisting}
+
+  Não esqueçam os imports de \texttt{List}, \texttt{ArrayList}
+  e \texttt{@RestController}.
+\end{frame}
+
+\begin{frame}[fragile]{GET --- só devolve a lista da classe}
+  \onde{Ainda em \texttt{AlunoController.java},\\
+        um método novo dentro da classe}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/alunos")
+public List<Aluno> listar() {
+  return alunos;
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Salvem, reiniciem o Spring, abram no navegador:
+
+  \vspace{0.3em}
+  \texttt{http://localhost:8080/api/alunos}
+
+  \vspace{0.4em}
+  Tem que aparecer o JSON de Ana, Bruno e Carla.\\
+  Ainda sem página --- só testando a API.
+\end{frame}
+
+\begin{frame}[fragile]{POST --- lê o corpo e adiciona na lista}
+  \onde{Ainda em \texttt{AlunoController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PostMapping("/api/alunos")
+public Aluno cadastrar(@RequestBody Aluno aluno) {
+  aluno.setId(proximoId);
+  proximoId = proximoId + 1;
+  alunos.add(aluno);
+  return aluno;
+}
+\end{lstlisting}
+
+  \vspace{0.3em}
+  \texttt{@RequestBody} = pega o JSON do \textbf{corpo} do pedido.
+
+  \vspace{0.3em}
+  Imports novos: \texttt{PostMapping} e \texttt{RequestBody}.
+\end{frame}
+
+\begin{frame}{O que o POST faz, em ordem}
+  \begin{enumerate}
+    \item O JavaScript manda JSON no corpo:\\
+          nome e turma
+    \item O Spring monta um \texttt{Aluno} com os \texttt{set}
+    \item Nós colocamos o próximo \texttt{id}
+    \item Adicionamos na lista \textbf{da classe}
+    \item Devolvemos o aluno já com id
+  \end{enumerate}
+
+  \vspace{0.5em}
+  O GET seguinte vê o aluno novo,\\
+  porque a lista não foi recriada.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 5 --- A página}
+  \onde{Projeto \textbf{cadastro-alunos}\\
+        Pasta \texttt{src/main/resources/static/}\\
+        Arquivo novo: \texttt{index.html}}
+
+  Esta é a tela. Ainda não tem lógica --- só o desenho:\\
+  um formulário e uma lista vazia.
+\end{frame}
+
+\begin{frame}[fragile]{index.html}
+  \onde{\texttt{src/main/resources/static/index.html}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+<h1>Cadastro de alunos</h1>
+
+<form id="form-aluno">
+  <input id="nome" type="text" placeholder="Nome">
+  <input id="turma" type="text" placeholder="Turma">
+  <button type="submit">Cadastrar</button>
+</form>
+
+<ul id="lista-alunos"></ul>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/js/app.js"></script>
+\end{lstlisting}
+
+  Axios \textbf{antes} do \texttt{app.js}.
+\end{frame}
+
+\begin{frame}{Passo 6 --- O JavaScript}
+  \onde{Projeto \textbf{cadastro-alunos}\\
+        Pasta \texttt{src/main/resources/static/js/}\\
+        Arquivo novo: \texttt{app.js}}
+
+  Duas tarefas neste arquivo:
+  \begin{enumerate}
+    \item Ao abrir a página, buscar a lista na API
+    \item Ao enviar o formulário, cadastrar na API\\
+          e atualizar a lista
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{app.js --- listar}
+  \onde{\texttt{static/js/app.js}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var lista = document.getElementById("lista-alunos");
+
+function carregarAlunos() {
+  axios.get("/api/alunos")
+    .then(function (resposta) {
+      var alunos = resposta.data;
+      lista.innerHTML = "";
+      for (var i = 0; i < alunos.length; i++) {
+        var li = document.createElement("li");
+        li.textContent =
+          alunos[i].nome + " - " + alunos[i].turma;
+        lista.appendChild(li);
+      }
+    });
+}
+
+carregarAlunos();
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Por que uma função carregarAlunos}
+  Vamos chamar essa função em dois momentos:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Quando a página abre
+    \item Depois de cadastrar --- para a lista mostrar o novo
+  \end{itemize}
+
+  \vspace{0.6em}
+  Se cadastrar e não chamar de novo, o backend gravou,\\
+  mas a tela fica antiga.
+\end{frame}
+
+\begin{frame}[fragile]{app.js --- cadastrar}
+  \onde{Ainda em \texttt{static/js/app.js}, abaixo do listar}
+
+  O formulário, sozinho, recarrega a página.\\
+  \texttt{preventDefault} impede isso.
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var form = document.getElementById("form-aluno");
+
+form.addEventListener("submit", function (evento) {
+  evento.preventDefault();
+  var nome = document.getElementById("nome").value;
+  var turma = document.getElementById("turma").value;
+
+  axios.post("/api/alunos", { nome: nome, turma: turma })
+    .then(function () {
+      carregarAlunos();
+    });
+});
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{O caminho do cadastro, do clique até a tela}
+  \begin{enumerate}
+    \item A pessoa preenche nome e turma e clica em Cadastrar
+    \item O JS manda \texttt{POST /api/alunos} com JSON no corpo
+    \item O Controller lê o corpo, gera o id, coloca na lista
+    \item O JS recebe a resposta e chama \texttt{carregarAlunos}
+    \item O GET busca a lista de novo e redesenha a \texttt{<ul>}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  No F12, aba Network, vocês devem ver\\
+  um POST e, em seguida, um GET.
+\end{frame}
+
+\begin{frame}{Conferindo o exemplo juntos}
+  \begin{itemize}
+    \item [ ] \texttt{http://localhost:8080/} abre o formulário
+    \item [ ] Ana, Bruno e Carla aparecem
+    \item [ ] Cadastrar um nome novo atualiza a lista
+    \item [ ] Recarregar a página \textbf{mantém} o nome novo
+    \item [ ] Parar e subir o Spring de novo: voltam só os três
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se o nome some ao recarregar a página,\\
+  a lista ainda está sendo criada dentro do \texttt{listar}.
+\end{frame}
+
+\begin{frame}{Erros que mais aparecem}
+  \begin{itemize}
+    \item Porta 8080 ocupada --- outro Spring ainda rodando
+    \item \texttt{axios is not defined} --- script do Axios
+          depois do \texttt{app.js}
+    \item POST quebra --- faltou construtor vazio no
+          \texttt{Aluno}
+    \item Página recarrega e o form esvazia --- faltou
+          \texttt{preventDefault}
+    \item Cadastrou e a lista não muda --- não chamou
+          \texttt{carregarAlunos}
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Desafios}
+
+\begin{frame}{Agora é com vocês}
+  Continuem no projeto \textbf{cadastro-alunos}.\\
+  Mesmos arquivos. Não criem outro projeto.
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Excluir aluno
+    \item Editar no backend
+    \item Editar pela tela
+  \end{enumerate}
+
+  \vspace{0.5em}
+  Salve $\rightarrow$ reinicie o Spring $\rightarrow$ teste no navegador.\\
+  F12, aba Network.
+\end{frame}
+
+\begin{frame}{PUT e DELETE usam o id no endereço}
+  Para mudar \textbf{um} aluno, o servidor precisa saber
+  \textbf{qual}.
+
+  \vspace{0.5em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Ação & Pedido \\
+    \midrule
+    Editar o aluno 2 & \texttt{PUT /api/alunos/2} \\
+      & corpo com nome e turma novos \\
+    Excluir o aluno 2 & \texttt{DELETE /api/alunos/2} \\
+      & sem corpo \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  O \texttt{2} é o \texttt{@PathVariable}.
+\end{frame}
+
+\begin{frame}{Desafio 1 --- Excluir}
+  \onde{1) \texttt{AlunoController.java}\\
+        2) \texttt{static/js/app.js}}
+
+  No Controller, método novo:
+
+  \vspace{0.3em}
+  \texttt{DELETE /api/alunos/\{id\}}
+
+  \vspace{0.4em}
+  Percorram a lista. Se o id bater:
+  \texttt{alunos.remove(i)} e parem o \texttt{for}.
+
+  \vspace{0.4em}
+  No JS, cada item da lista ganha um botão Excluir.\\
+  No clique: \texttt{axios.delete("/api/alunos/" + id)}\\
+  e depois \texttt{carregarAlunos()}.
+\end{frame}
+
+\begin{frame}[fragile]{Desafio 1 --- o botão no JS}
+  \onde{\texttt{static/js/app.js}, dentro do \texttt{for}\\
+        que monta a lista}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var botao = document.createElement("button");
+botao.textContent = "Excluir";
+botao.setAttribute("data-id", alunos[i].id);
+
+botao.addEventListener("click", function (evento) {
+  var id = evento.target.getAttribute("data-id");
+  axios.delete("/api/alunos/" + id)
+    .then(function () {
+      carregarAlunos();
+    });
+});
+
+li.appendChild(botao);
+\end{lstlisting}
+
+  Usem \texttt{evento.target}, não a variável \texttt{botao}.
+\end{frame}
+
+\begin{frame}[fragile]{Desafio 2 --- Editar no Controller}
+  \onde{\texttt{AlunoController.java}}
+
+  Método novo: \texttt{PUT /api/alunos/\{id\}}
+
+  \vspace{0.3em}
+  Recebam o id da URL e o aluno do corpo.\\
+  Achem na lista, atualizem nome e turma, devolvam o aluno.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PutMapping("/api/alunos/{id}")
+public Aluno atualizar(@PathVariable int id,
+                       @RequestBody Aluno dados) {
+  // for na lista, se o id bater:
+  // setNome e setTurma, depois return
+  return null;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Desafio 3 --- Editar pela tela}
+  \onde{\texttt{static/js/app.js}}
+
+  Objetivo: clicar em Editar, o formulário se preenche,\\
+  e o Cadastrar passa a salvar a alteração.
+
+  \vspace{0.4em}
+  \begin{enumerate}
+    \item Variável \texttt{idEditando}, começando vazia
+    \item Botão Editar coloca o id, o nome e a turma no form
+    \item Se \texttt{idEditando} estiver vazio $\rightarrow$ POST
+    \item Se tiver id $\rightarrow$ PUT para aquele id
+    \item No fim, limpem o form e o \texttt{idEditando}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Extra}
+  Se terminarem os três, ainda no \textbf{cadastro-alunos}:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Não cadastrar se o nome estiver vazio
+    \item Mostrar o id na lista
+    \item Texto na página: ``Aluno cadastrado''
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Checklist}
+  \begin{itemize}
+    \item [ ] Estou no projeto \texttt{cadastro-alunos}?
+    \item [ ] A lista é campo da classe, não do método
+              \texttt{listar}?
+    \item [ ] \texttt{Aluno} tem construtor vazio?
+    \item [ ] POST usa \texttt{@RequestBody}?
+    \item [ ] O form tem \texttt{preventDefault}?
+    \item [ ] Depois de gravar, chama \texttt{carregarAlunos}?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Intervalo}
+  \begin{center}
+    \Large Retomamos às \textbf{20h20}\\[0.8em]
+    \normalsize
+    Fechem o \texttt{cadastro-alunos}.\\
+    Na segunda parte abrimos o \textbf{StockSales}.
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{Parte 2 --- StockSales}
+
+\begin{frame}{Mudamos de projeto}
+  \onde{Agora é o projeto \textbf{StockSales},\\
+        não o cadastro-alunos.}
+
+  Parem o Spring do cadastro-alunos.\\
+  Abram a pasta do StockSales e subam de novo.
+\end{frame}
+
+\begin{frame}{Onde o StockSales parou}
+  Arquivos que vocês já têm:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item \texttt{controller/ProdutoController.java}
+    \item \texttt{model/Produto.java}
+    \item \texttt{static/produtos.html}
+    \item \texttt{static/js/produtos.js}
+  \end{itemize}
+
+  \vspace{0.5em}
+  Hoje a lista é criada \textbf{dentro} de
+  \texttt{listarProdutos}.\\
+  Por isso todo GET volta sempre os quatro produtos fixos.
+
+  \vspace{0.4em}
+  A lista deve \textbf{continuar no Controller}.\\
+  Só precisa sair de dentro dessa função.
+\end{frame}
+
+\begin{frame}{O que vamos fazer no StockSales}
+  \begin{enumerate}
+    \item Subir a lista de produtos para a classe
+          \texttt{ProdutoController}
+    \item Cadastrar, editar e excluir produto
+    \item Formulário na tela de produtos
+    \item Criar cliente: classe, Controller e tela
+  \end{enumerate}
+
+  \vspace{0.5em}
+  É o mesmo raciocínio do cadastro-alunos.\\
+  Só mudam os campos e os nomes dos arquivos.
+\end{frame}
+
+\begin{frame}[fragile]{Produto.java --- construtor vazio}
+  \onde{Projeto \textbf{StockSales}\\
+        Arquivo \texttt{src/main/java/com/entra21/stocksales/model/Produto.java}}
+
+  Acrescentem este construtor. Mantenham o outro.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public Produto() {
+}
+\end{lstlisting}
+
+  Sem ele, o POST de produto quebra.
+\end{frame}
+
+\begin{frame}[fragile]{A lista sai do método, fica na classe}
+  \onde{\texttt{controller/ProdutoController.java}}
+
+  \textbf{Não} tirem a lista do Controller.\\
+  Tirem só de dentro de \texttt{listarProdutos}.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+private List<Produto> produtos = new ArrayList<>();
+private int proximoId = 1;
+
+public ProdutoController() {
+  produtos.add(new Produto(1, "Teclado Mecanico", 250, 12));
+  produtos.add(new Produto(2, "Mouse Gamer", 120, 30));
+  produtos.add(new Produto(3, "Monitor 24", 900, 8));
+  produtos.add(new Produto(4, "Headset", 200, 15));
+  proximoId = 5;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{listarProdutos fica só isto}
+  \onde{Ainda em \texttt{ProdutoController.java}}
+
+  Antes o método criava a lista. Agora só devolve.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/produtos")
+public List<Produto> listarProdutos() {
+  return produtos;
+}
+\end{lstlisting}
+
+  Testem \texttt{/api/produtos} no navegador:\\
+  tem que continuar mostrando os quatro.
+\end{frame}
+
+\begin{frame}[fragile]{POST de produto}
+  \onde{Ainda em \texttt{ProdutoController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PostMapping("/api/produtos")
+public Produto cadastrar(@RequestBody Produto produto) {
+  produto.setId(proximoId);
+  proximoId = proximoId + 1;
+  produtos.add(produto);
+  return produto;
+}
+\end{lstlisting}
+
+  PUT e DELETE: mesmo \texttt{for} do desafio dos alunos,\\
+  com \texttt{/api/produtos/\{id\}}.
+\end{frame}
+
+\begin{frame}{Tela de produtos}
+  \onde{\texttt{static/produtos.html} e \texttt{static/js/produtos.js}}
+
+  Na HTML, acima da lista: formulário com nome, preço e estoque.
+
+  \vspace{0.4em}
+  No JS:
+  \begin{itemize}
+    \item Função \texttt{carregarProdutos} --- vocês já listam;
+          só extraíam para uma função
+    \item \texttt{preventDefault} no form
+    \item \texttt{axios.post("/api/produtos", \{ ... \})}
+    \item Botão Excluir em cada item
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Preço e estoque são número}
+  \onde{\texttt{static/js/produtos.js}}
+
+  O input sempre devolve texto. O Java espera número.
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+axios.post("/api/produtos", {
+  nome: document.getElementById("nome").value,
+  preco: Number(document.getElementById("preco").value),
+  estoque: Number(document.getElementById("estoque").value)
+});
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Classe Cliente}
+  \onde{Projeto \textbf{StockSales}\\
+        Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/stocksales/model/Cliente.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Cliente {
+  private int id;
+  private String nome;
+  private String email;
+  private String telefone;
+
+  public Cliente() {}
+}
+\end{lstlisting}
+
+  Construtor com os quatro valores + gets e sets.
+\end{frame}
+
+\begin{frame}{Controller e tela de clientes}
+  \onde{Arquivos novos:\\
+        \texttt{controller/ClienteController.java}\\
+        \texttt{static/clientes.html}\\
+        \texttt{static/js/clientes.js}}
+
+  Copiem o esquema do produto:
+  \begin{itemize}
+    \item Lista na \textbf{classe} do Controller
+    \item GET / POST / PUT / DELETE em \texttt{/api/clientes}
+    \item Formulário: nome, e-mail, telefone
+  \end{itemize}
+
+  \vspace{0.4em}
+  Na home, um link para \texttt{/clientes.html}.
+\end{frame}
+
+\begin{frame}{O que não entra hoje}
+  \begin{itemize}
+    \item Vendas e baixa de estoque --- próxima aula
+    \item Banco de dados
+    \item Login
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{block}{Meta no StockSales}
+    Cadastrar, listar, editar e excluir produtos.\\
+    Cadastrar, listar, editar e excluir clientes.\\
+    Lista na classe do Controller, ainda sem banco.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Critérios de aceite}
+  \begin{itemize}
+    \item [ ] Produto novo aparece na lista
+    \item [ ] Recarregar a página mantém, até reiniciar o Spring
+    \item [ ] Excluir some da lista
+    \item [ ] Editar muda nome, preço ou estoque
+    \item [ ] Clientes no mesmo esquema
+    \item [ ] Home leva a produtos e a clientes
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Recapitulando}
+
+\begin{frame}{O que vimos hoje}
+  \begin{enumerate}
+    \item Requisição: verbo + endereço + corpo
+    \item Resposta: status + JSON
+    \item POST/PUT mandam dados no corpo
+    \item A lista fica no Controller, fora do método de listar
+    \item CRUD no cadastro-alunos e no StockSales
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Na próxima aula}
+  \begin{block}{Aula 04}
+    \begin{itemize}
+      \item Vendas no StockSales
+      \item Escolher cliente e produtos
+      \item Baixa de estoque
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.6em}
+  Tragam o StockSales com produtos e clientes cadastráveis.
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \Huge Obrigado!\\[1.2em]
+    \normalsize Mauricio Duailibi Neto\\
+    Turma Java Entra21
+  \end{center}
+\end{frame}
+
+\end{document}
