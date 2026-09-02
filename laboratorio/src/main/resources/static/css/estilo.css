@@ -1,199 +1,8 @@
-/* Reset básico */
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    min-height: 100vh;
-
-    font-family: Arial, Helvetica, sans-serif;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    padding: 60px 20px;
-
-    color: #1e293b;
-
-    background:
-        radial-gradient(
-            circle at top left,
-            rgba(59, 130, 246, 0.25),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at bottom right,
-            rgba(139, 92, 246, 0.2),
-            transparent 35%
-        ),
-        #f1f5f9;
-}
-
-
-/* Título */
-
-h1 {
-    width: 100%;
-    max-width: 800px;
-
-    margin: 0 0 32px;
-
-    text-align: center;
-
-    font-size: 2.2rem;
-    color: #0f172a;
-}
-
-.subtitulo {
-    margin-top: -20px;
-    margin-bottom: 32px;
-
-    text-align: center;
-
-    color: #64748b;
-    font-size: 1.05rem;
-}
-
-
-/* Formulário */
-
-form {
-    width: 100%;
-    max-width: 800px;
-
-    display: flex;
-    gap: 12px;
-
-    padding: 24px;
-
-    background: rgba(255, 255, 255, 0.85);
-
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    border-radius: 18px;
-
-    box-shadow:
-        0 10px 30px rgba(15, 23, 42, 0.08);
-
-    backdrop-filter: blur(10px);
-}
-
-
-/* Inputs */
-
-form input {
-    flex: 1;
-
-    min-width: 0;
-
-    padding: 14px 16px;
-
-    font-size: 1rem;
-
-    color: #1e293b;
-    background: #ffffff;
-
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-
-    outline: none;
-
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s,
-        transform 0.2s;
-}
-
-form input:focus {
-    border-color: #2563eb;
-
-    box-shadow:
-        0 0 0 4px rgba(37, 99, 235, 0.12);
-}
-
-form input::placeholder {
-    color: #94a3b8;
-}
-
-
-/* Botão */
-
-form button {
-    padding: 14px 24px;
-
-    font-size: 1rem;
-    font-weight: bold;
-
-    color: white;
-
-    background: linear-gradient(
-        135deg,
-        #2563eb,
-        #4f46e5
-    );
-
-    border: none;
-    border-radius: 10px;
-
-    cursor: pointer;
-
-    box-shadow:
-        0 6px 15px rgba(37, 99, 235, 0.25);
-
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s,
-        opacity 0.2s;
-}
-
-form button:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 10px 20px rgba(37, 99, 235, 0.3);
-}
-
-form button:active {
-    transform: translateY(0);
-}
-
-
-/* Área de mensagens */
-
-#mensagem {
-    width: 100%;
-    max-width: 800px;
-
-    min-height: 1.5em;
-
-    margin: 18px 0;
-
-    text-align: center;
-    font-weight: 500;
-
-    color: #475569;
-}
-
-
-/* Lista */
-
-#lista-materiais {
-    width: 100%;
-    max-width: 800px;
-
-    margin: 0;
-    padding: 0;
-
-    list-style: none;
-}
-
-
-/* Itens adicionados dinamicamente */
-
 #lista-materiais li {
     display: flex;
     align-items: center;
+
+    gap: 10px;
 
     margin-bottom: 10px;
     padding: 18px 20px;
@@ -213,32 +22,56 @@ form button:active {
         box-shadow 0.2s;
 }
 
-#lista-materiais li:hover {
-    transform: translateX(5px);
 
-    box-shadow:
-        0 8px 20px rgba(15, 23, 42, 0.08);
+/* Todos os botões */
+
+#lista-materiais li button {
+    padding: 8px 14px;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 0.9rem;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s,
+        opacity 0.2s;
 }
 
 
-/* Responsividade */
+/* Primeiro botão vai para a direita */
 
-@media (max-width: 650px) {
+#lista-materiais li button:first-of-type {
+    margin-left: auto;
+}
 
-    body {
-        padding: 40px 16px;
-    }
 
-    h1 {
-        font-size: 1.8rem;
-    }
+/* Botão de editar */
 
-    form {
-        flex-direction: column;
-    }
+#lista-materiais li button.editar {
+    color: white;
+    background: #2563eb;
+}
 
-    form button {
-        width: 100%;
-    }
+#lista-materiais li button.editar:hover {
+    background: #1d4ed8;
 
+    transform: scale(1.05);
+}
+
+
+/* Botão de excluir */
+
+#lista-materiais li button.excluir {
+    color: white;
+    background: #ef4444;
+}
+
+#lista-materiais li button.excluir:hover {
+    background: #dc2626;
+
+    transform: scale(1.05);
 }
