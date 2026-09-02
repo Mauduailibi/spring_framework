@@ -1,0 +1,22 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 24px;
+}
+
+form input,
+form button {
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+#mensagem {
+    min-height: 1.2em;
+}

@@ -1,0 +1,1576 @@
+% =============================================================================
+% Aula 04 — PUT · Regra de negócio · Vendas no StockSales
+% Beamer + tema Madrid | Curso Entra21 — Spring Framework
+% Compilar: tectonic -X compile slides-aula-04.tex
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codeblue}{RGB}{30,70,160}
+\definecolor{codered}{RGB}{180,50,50}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codered},
+  tabsize=2,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+           {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+           {ê}{{\^e}}1 {Ê}{{\^E}}1 {â}{{\^a}}1 {Â}{{\^A}}1
+           {à}{{\`a}}1 {À}{{\`A}}1
+}
+
+\newcommand{\onde}[1]{%
+  \begin{block}{Onde estamos}
+    #1
+  \end{block}
+}
+
+\title{Aula 04 --- Spring Framework}
+\subtitle{PUT · Regra de negócio · Vendas}
+\author{Mauricio Duailibi Neto}
+\institute{Turma Java Entra21}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Como será a aula de hoje}
+  \begin{block}{Parte 1 --- 18h30 às 20h}
+    \begin{itemize}
+      \item Revisão da Aula 03
+      \item PUT: alterar um cadastro
+      \item Buscar um item pelo id
+      \item Retirar quantidade, com regra
+      \item Projeto \textbf{laboratorio} --- fazemos juntos
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.4em}
+  \begin{block}{Parte 2 --- 20h20 às 22h}
+    \begin{itemize}
+      \item Voltamos ao \textbf{StockSales}
+      \item PUT de produto, clientes e venda
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Dois projetos nesta aula}
+  Não vamos misturar os códigos.
+
+  \vspace{0.6em}
+  \begin{description}
+    \item[laboratorio] Primeira parte da aula.
+      Aqui aprendemos PUT e a regra de retirar quantidade.
+    \item[StockSales] O sistema da loja, que já existe.
+      Só depois do intervalo.
+  \end{description}
+
+  \vspace{0.6em}
+  Quando aparecer um código, o slide vai dizer:\\
+  \textbf{qual projeto} e \textbf{qual arquivo} estamos mexendo.
+\end{frame}
+
+\begin{frame}{Mapa da aula}
+  \tableofcontents
+\end{frame}
+
+% #############################################################################
+\section{Revisão da Aula 03}
+
+\begin{frame}{O que já sabemos}
+  \begin{itemize}
+    \item A lista fica \textbf{na classe} do Controller
+    \item GET devolve a lista
+    \item POST lê o JSON do corpo e adiciona na lista
+    \item DELETE usa o id no endereço e remove o item
+    \item O JavaScript chama a API com Axios
+  \end{itemize}
+
+  \vspace{0.7em}
+  Faltou o PUT: \textbf{alterar} um cadastro que já existe.
+\end{frame}
+
+\begin{frame}{Os quatro verbos}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Ação & Verbo HTTP & O que faz \\
+    \midrule
+    Listar / ler & GET & Lê, não muda nada \\
+    Cadastrar & POST & Cria um item novo \\
+    Editar & PUT & Troca os dados de um item \\
+    Excluir & DELETE & Apaga um item \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  CRUD continua o mesmo nome:\\
+  Create, Read, Update, Delete.\\
+  O Update é o PUT de hoje.
+\end{frame}
+
+\begin{frame}{O id na URL}
+  DELETE já usou o id no endereço:
+
+  \vspace{0.5em}
+  \texttt{DELETE /api/materiais/2}
+
+  \vspace{0.5em}
+  O \texttt{2} é o \texttt{@PathVariable}.\\
+  O método recebe esse número e procura na lista.
+
+  \vspace{0.6em}
+  PUT usa o mesmo jeito:\\
+  \texttt{PUT /api/materiais/2}\\
+  Só que, além do id, vem um \textbf{corpo} com os dados novos.
+\end{frame}
+
+% #############################################################################
+\section{Projeto laboratorio}
+
+\begin{frame}{O projeto laboratorio}
+  A partir de hoje os exercícios da primeira parte\\
+  ficam no projeto \textbf{laboratorio}.
+
+  \vspace{0.5em}
+  Ele já está no repositório.\\
+  Não vamos gerar outro projeto no \texttt{start.spring.io}.
+
+  \vspace{0.6em}
+  \begin{block}{O que já vem pronto}
+    Cadastro de materiais com GET, POST e DELETE.\\
+    Lista na classe. Formulário na tela. Botão Excluir.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Passo 1 --- Atualizar o repositório}
+  No terminal, dentro da pasta do repositório:
+
+  \vspace{0.5em}
+  \texttt{git pull}
+
+  \vspace{0.6em}
+  Deve aparecer a pasta \texttt{laboratorio/}.
+
+  \vspace{0.5em}
+  Abram essa pasta no VS Code.
+\end{frame}
+
+\begin{frame}{Passo 2 --- Subir o Spring}
+  \onde{Projeto \textbf{laboratorio}}
+
+  No terminal, dentro da pasta \texttt{laboratorio}:
+
+  \vspace{0.4em}
+  \texttt{./mvnw spring-boot:run}\\
+  {\small No Windows: \texttt{.\textbackslash mvnw.cmd spring-boot:run}}
+
+  \vspace{0.5em}
+  Abram no navegador: \texttt{http://localhost:8080}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Um Spring por vez}
+    Se outro projeto ainda estiver na porta 8080,
+    parem o outro antes.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Quais arquivos já existem}
+  Projeto: \textbf{laboratorio}
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Arquivo & Para quê \\
+    \midrule
+    \texttt{Material.java} & Os dados de um material \\
+    \texttt{MaterialController.java} & GET, POST e DELETE \\
+    \texttt{static/index.html} & A página \\
+    \texttt{static/js/app.js} & O JavaScript da página \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  Hoje vamos \textbf{acrescentar} métodos e botões.\\
+  Não criamos outro projeto.
+\end{frame}
+
+\begin{frame}[fragile]{Onde cada arquivo fica}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+laboratorio/
+  src/main/java/com/entra21/laboratorio/
+    LaboratorioApplication.java
+    model/Material.java
+    controller/MaterialController.java
+  src/main/resources/static/
+    index.html
+    js/app.js
+\end{lstlisting}
+
+  Java fica em \texttt{java/}.\\
+  Página e JS ficam em \texttt{resources/static/}.
+\end{frame}
+
+\begin{frame}{Conferindo o que já funciona}
+  \begin{itemize}
+    \item [ ] A página abre em \texttt{http://localhost:8080}
+    \item [ ] Caneta, Caderno e Grampeador aparecem
+    \item [ ] Cadastrar um material novo atualiza a lista
+    \item [ ] Excluir some da lista
+    \item [ ] Recarregar a página mantém o que estava na memória
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se isso não estiver ok, não sigam para o PUT.\\
+  A lista precisa estar na classe, como na aula passada.
+\end{frame}
+
+\begin{frame}[fragile]{Material.java --- o que a classe guarda}
+  \onde{\texttt{model/Material.java}}
+
+  Três dados: id, nome e quantidade.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Material {
+  private int id;
+  private String nome;
+  private int quantidade;
+}
+\end{lstlisting}
+
+  Já existem construtor vazio, construtor cheio, gets e sets.\\
+  Não precisamos mexer nesta classe agora.
+\end{frame}
+
+% #############################################################################
+\section{PUT}
+
+\begin{frame}{Cadastrar e alterar não são a mesma ação}
+  \begin{itemize}
+    \item POST cria um material \textbf{novo} e gera um id
+    \item PUT pega um material \textbf{que já existe} e troca
+          nome ou quantidade
+  \end{itemize}
+
+  \vspace{0.6em}
+  Se usarmos POST para editar, nasce um segundo cadastro.\\
+  O antigo continua lá.
+
+  \vspace{0.5em}
+  Por isso o PUT leva o id: o servidor precisa saber
+  \textbf{qual} linha da lista vai mudar.
+\end{frame}
+
+\begin{frame}[fragile]{O pedido de alteração}
+  Exemplo: a Caneta passou a ter quantidade 20.
+
+  \vspace{0.4em}
+  \begin{block}{Pedido}
+    \begin{itemize}
+      \item Verbo: \texttt{PUT}
+      \item Endereço: \texttt{/api/materiais/1}
+      \item Corpo:
+    \end{itemize}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{"nome": "Caneta", "quantidade": 20}
+\end{lstlisting}
+  \end{block}
+
+  \vspace{0.2em}
+  O id vai na URL.\\
+  Nome e quantidade novos vão no corpo.
+\end{frame}
+
+\begin{frame}{O que o PUT faz, em ordem}
+  \begin{enumerate}
+    \item Lê o id da URL
+    \item Lê nome e quantidade do corpo
+    \item Percorre a lista
+    \item Quando o id bater: chama \texttt{setNome} e
+          \texttt{setQuantidade}
+    \item Devolve o material já atualizado
+  \end{enumerate}
+
+  \vspace{0.5em}
+  A lista é a mesma.\\
+  Só os campos daquele objeto mudam.
+\end{frame}
+
+\begin{frame}[fragile]{PUT no Controller}
+  \onde{Projeto \textbf{laboratorio}\\
+        Arquivo \texttt{controller/MaterialController.java}\\
+        método novo, dentro da classe}
+
+  Imports novos: \texttt{PutMapping}.\\
+  \texttt{PathVariable} e \texttt{RequestBody} vocês já usam.
+\end{frame}
+
+\begin{frame}[fragile]{MaterialController.java --- atualizar}
+  \onde{\texttt{MaterialController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PutMapping("/api/materiais/{id}")
+public Material atualizar(@PathVariable int id,
+                          @RequestBody Material dados) {
+  for (int i = 0; i < materiais.size(); i++) {
+    if (materiais.get(i).getId() == id) {
+      materiais.get(i).setNome(dados.getNome());
+      materiais.get(i).setQuantidade(dados.getQuantidade());
+      return materiais.get(i);
+    }
+  }
+  return null;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Olhando o \texttt{for} com calma}
+  \begin{enumerate}
+    \item \texttt{i} começa em 0 e anda até o fim da lista
+    \item \texttt{materiais.get(i)} é o material daquela posição
+    \item Se o id for o que veio na URL, achamos o certo
+    \item \texttt{setNome} e \texttt{setQuantidade} gravam
+          o que veio no JSON
+    \item \texttt{return} devolve esse material e encerra o método
+  \end{enumerate}
+
+  \vspace{0.5em}
+  Se o \texttt{for} terminar sem achar, devolvemos \texttt{null}.
+\end{frame}
+
+\begin{frame}{POST cria. PUT não cria}
+  No POST vocês faziam:
+
+  \vspace{0.3em}
+  \texttt{material.setId(proximoId);} e \texttt{materiais.add(...)}
+
+  \vspace{0.5em}
+  No PUT \textbf{não} geramos id novo e \textbf{não} damos add.\\
+  O objeto já está na lista. Só mudamos os campos.
+
+  \vspace{0.5em}
+  Se derem add no PUT, o material antigo continua
+  e ainda nasce um duplicado.
+\end{frame}
+
+\begin{frame}{Editar pela tela}
+  \onde{Projeto \textbf{laboratorio}\\
+        Arquivo \texttt{static/js/app.js}}
+
+  Objetivo: clicar em Editar, o formulário se preenche,
+  e o envio passa a ser um PUT.
+\end{frame}
+
+\begin{frame}[fragile]{Uma variável para o id em edição}
+  \onde{\texttt{static/js/app.js}, no topo do arquivo}
+
+  Se estiver vazia, o form cadastra.\\
+  Se tiver um número, o form altera.
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var idEditando = "";
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Vamos usar essa variável em dois lugares:
+  \begin{itemize}
+    \item no botão Editar, para guardar o id
+    \item no submit do form, para escolher POST ou PUT
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Botão Editar dentro do \texttt{for}}
+  \onde{\texttt{static/js/app.js}, no \texttt{for} de
+        \texttt{carregarMateriais}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+var btnEditar = document.createElement("button");
+btnEditar.textContent = "Editar";
+btnEditar.setAttribute("data-id", material.id);
+btnEditar.setAttribute("data-nome", material.nome);
+btnEditar.setAttribute("data-quantidade", material.quantidade);
+
+btnEditar.addEventListener("click", function (evento) {
+  idEditando = evento.target.getAttribute("data-id");
+  document.getElementById("nome").value =
+    evento.target.getAttribute("data-nome");
+  document.getElementById("quantidade").value =
+    evento.target.getAttribute("data-quantidade");
+});
+li.appendChild(btnEditar);
+\end{lstlisting}
+
+  O botão Editar fica \textbf{antes} do botão Excluir.
+\end{frame}
+
+\begin{frame}{Por que \texttt{data-id} e \texttt{evento.target}}
+  O \texttt{for} roda rápido e termina.\\
+  O clique acontece depois.
+
+  \vspace{0.5em}
+  Se o clique usar a variável \texttt{material} do \texttt{for},
+  todos os botões podem pegar o último da lista.
+
+  \vspace{0.5em}
+  Por isso o id vai para o atributo do botão,
+  e o clique lê \texttt{evento.target}.
+\end{frame}
+
+\begin{frame}[fragile]{O submit --- montar os dados}
+  \onde{\texttt{static/js/app.js}, no \texttt{submit} do form}
+
+  Troquem o \texttt{axios.post} único por este bloco.
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var dados = {
+  nome: document.getElementById("nome").value,
+  quantidade: Number(
+    document.getElementById("quantidade").value)
+};
+\end{lstlisting}
+
+  A quantidade vai com \texttt{Number}, porque o input devolve texto.
+\end{frame}
+
+\begin{frame}[fragile]{O submit --- POST ou PUT}
+  \onde{Ainda no \texttt{submit}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+if (idEditando === "") {
+  axios.post("/api/materiais", dados).then(function () {
+    document.getElementById("nome").value = "";
+    document.getElementById("quantidade").value = "";
+    carregarMateriais();
+  });
+} else {
+  axios.put("/api/materiais/" + idEditando, dados)
+    .then(function () {
+      idEditando = "";
+      document.getElementById("nome").value = "";
+      document.getElementById("quantidade").value = "";
+      carregarMateriais();
+    });
+}
+\end{lstlisting}
+
+  Depois do PUT, \texttt{idEditando} volta para vazio.\\
+  O próximo envio volta a ser cadastro.
+\end{frame}
+
+\begin{frame}{Quantidade é número}
+  O input devolve texto.\\
+  No Java o campo é \texttt{int}.
+
+  \vspace{0.5em}
+  Por isso: \texttt{Number(...)}.
+
+  \vspace{0.5em}
+  Sem isso, o PUT pode gravar errado
+  ou o terminal mostra erro ao converter.
+\end{frame}
+
+\begin{frame}{O caminho da edição}
+  \begin{enumerate}
+    \item A pessoa clica em Editar na Caneta
+    \item O form mostra o nome e a quantidade atuais
+    \item Ela troca a quantidade e envia
+    \item O JS manda \texttt{PUT /api/materiais/1} com JSON
+    \item O Controller acha o id 1 e atualiza
+    \item O JS chama \texttt{carregarMateriais} de novo
+  \end{enumerate}
+
+  \vspace{0.5em}
+  No F12, aba Network, deve aparecer um PUT.
+\end{frame}
+
+\begin{frame}{Conferindo o PUT}
+  \begin{itemize}
+    \item [ ] Editar preenche o formulário
+    \item [ ] Enviar \textbf{não} cria um material duplicado
+    \item [ ] A quantidade nova aparece na lista
+    \item [ ] Depois de salvar, o próximo envio volta a cadastrar
+    \item [ ] No Network, o pedido é PUT, não POST
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se nascer um item a mais, o submit ainda está só no POST,
+  ou o PUT está dando \texttt{add} na lista.
+\end{frame}
+
+% #############################################################################
+\section{Buscar um pelo id}
+
+\begin{frame}{Lista inteira e um só material}
+  GET \texttt{/api/materiais} devolve \textbf{todos}.
+
+  \vspace{0.5em}
+  Às vezes precisamos de \textbf{um}:
+  \begin{itemize}
+    \item para ver só a Caneta
+    \item para conferir a quantidade antes de retirar
+  \end{itemize}
+
+  \vspace{0.5em}
+  O endereço leva o id:\\
+  \texttt{GET /api/materiais/1}
+\end{frame}
+
+\begin{frame}[fragile]{GET por id}
+  \onde{Projeto \textbf{laboratorio}\\
+        \texttt{MaterialController.java}, método novo}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/materiais/{id}")
+public Material buscar(@PathVariable int id) {
+  for (int i = 0; i < materiais.size(); i++) {
+    if (materiais.get(i).getId() == id) {
+      return materiais.get(i);
+    }
+  }
+  return null;
+}
+\end{lstlisting}
+
+  O \texttt{for} é o mesmo do PUT e do DELETE.\\
+  Só muda o que fazemos quando achamos: devolver, em vez de
+  alterar ou apagar.
+\end{frame}
+
+\begin{frame}{Dois GET no mesmo Controller}
+  O Spring escolhe pelo endereço:
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Pedido & Método \\
+    \midrule
+    \texttt{GET /api/materiais} & \texttt{listar} \\
+    \texttt{GET /api/materiais/2} & \texttt{buscar} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  O \texttt{\{id\}} é o que diferencia os dois.
+\end{frame}
+
+\begin{frame}{Teste no navegador}
+  Salvem, reiniciem se precisar, e abram:
+
+  \vspace{0.4em}
+  \texttt{http://localhost:8080/api/materiais/2}
+
+  \vspace{0.5em}
+  Deve aparecer só o Caderno, em JSON.
+
+  \vspace{0.4em}
+  \texttt{/api/materiais} continua mostrando a lista toda.
+
+  \vspace{0.5em}
+  Um id que não existe devolve página vazia ou \texttt{null}.
+\end{frame}
+
+% #############################################################################
+\section{Retirar quantidade}
+
+\begin{frame}{Uma ação pode mudar um campo}
+  Até agora o cadastro só cria, lê, troca tudo ou apaga.
+
+  \vspace{0.5em}
+  Retirar é outra ação: a pessoa pede uma quantidade,
+  e o servidor \textbf{diminui} o que está guardado.
+
+  \vspace{0.5em}
+  Exemplo: Caderno tem 5.\\
+  Retirar 2 $\rightarrow$ fica 3.
+\end{frame}
+
+\begin{frame}{A regra}
+  Antes de diminuir, conferimos se dá.
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Achar o material pelo id
+    \item Se a quantidade guardada for \textbf{menor}
+          do que a pedida: \textbf{não muda nada}
+    \item Se der: subtrai e devolve o material
+  \end{enumerate}
+
+  \vspace{0.6em}
+  \begin{alertblock}{Não fica negativo}
+    Pedir 10 de um item que tem 2 não pode passar de 2
+    para $-8$. O servidor recusa.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{O pedido de retirar}
+  \begin{block}{Pedido}
+    \begin{itemize}
+      \item Verbo: \texttt{POST}
+      \item Endereço: \texttt{/api/materiais/2/retirar}
+      \item Corpo:
+    \end{itemize}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{"quantidade": 2}
+\end{lstlisting}
+  \end{block}
+
+  \vspace{0.3em}
+  POST porque é uma ação, não uma troca completa do cadastro.\\
+  O id continua na URL.
+\end{frame}
+
+\begin{frame}{Quando não pode, o servidor recusa}
+  Se a quantidade não alcança, não basta devolver o material
+  antigo em silêncio. A tela precisa avisar.
+
+  \vspace{0.5em}
+  Vamos lançar um erro HTTP 400:
+
+  \vspace{0.3em}
+  \texttt{ResponseStatusException}
+
+  \vspace{0.5em}
+  O Axios, nesse caso, cai no \texttt{catch}.\\
+  Ali mostramos a mensagem na página.
+\end{frame}
+
+\begin{frame}[fragile]{Retirar --- achar e conferir}
+  \onde{Projeto \textbf{laboratorio}\\
+        \texttt{MaterialController.java}}
+
+  Imports novos:\\
+  \texttt{HttpStatus} e \texttt{ResponseStatusException}.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{MaterialController.java --- retirar}
+  \onde{\texttt{MaterialController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/api/materiais/{id}/retirar")
+public Material retirar(@PathVariable int id,
+                        @RequestBody Material pedido) {
+  for (int i = 0; i < materiais.size(); i++) {
+    Material material = materiais.get(i);
+    if (material.getId() == id) {
+      if (material.getQuantidade() < pedido.getQuantidade()) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST, "Quantidade insuficiente");
+      }
+      material.setQuantidade(
+          material.getQuantidade() - pedido.getQuantidade());
+      return material;
+    }
+  }
+  return null;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{O JSON do retirar}
+  O corpo só precisa da quantidade:
+
+  \vspace{0.3em}
+  \texttt{\{"quantidade": 2\}}
+
+  \vspace{0.5em}
+  O Spring monta um \texttt{Material} e preenche
+  só esse campo. O resto fica vazio.
+
+  \vspace{0.5em}
+  Nós usamos apenas \texttt{pedido.getQuantidade()}.\\
+  Não damos add. Não geramos id. Não trocamos o nome.
+\end{frame}
+
+\begin{frame}{O \texttt{if} da regra}
+  \texttt{material.getQuantidade() < pedido.getQuantidade()}
+
+  \vspace{0.5em}
+  Se for verdade: lança a exceção e \textbf{para}.\\
+  A linha do \texttt{setQuantidade} não roda.
+
+  \vspace{0.5em}
+  Se for falso: subtrai e devolve o material.
+\end{frame}
+
+\begin{frame}[fragile]{Botão Retirar no JS}
+  \onde{\texttt{static/js/app.js}, no \texttt{for} de
+        \texttt{carregarMateriais}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+var btnRetirar = document.createElement("button");
+btnRetirar.textContent = "Retirar 1";
+btnRetirar.setAttribute("data-id", material.id);
+
+btnRetirar.addEventListener("click", function (evento) {
+  var id = evento.target.getAttribute("data-id");
+  axios.post("/api/materiais/" + id + "/retirar", { quantidade: 1 })
+    .then(function () {
+      document.getElementById("mensagem").textContent = "";
+      carregarMateriais();
+    })
+    .catch(function () {
+      document.getElementById("mensagem").textContent =
+        "Quantidade insuficiente";
+    });
+});
+li.appendChild(btnRetirar);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{\texttt{then} e \texttt{catch}}
+  \begin{itemize}
+    \item \texttt{then} --- o servidor aceitou. Atualizamos a lista.
+    \item \texttt{catch} --- o servidor recusou. Mostramos o texto
+          no \texttt{<p id="mensagem">}.
+  \end{itemize}
+
+  \vspace{0.6em}
+  Esse \texttt{<p>} já está no \texttt{index.html}.
+
+  \vspace{0.5em}
+  Sem o \texttt{catch}, a recusa aparece só no F12
+  e a pessoa não entende o que aconteceu.
+\end{frame}
+
+\begin{frame}{O caminho da retirada}
+  \begin{enumerate}
+    \item Clique em Retirar 1 no Grampeador
+    \item JS manda POST com \texttt{\{ quantidade: 1 \}}
+    \item Controller acha o id, confere, diminui
+    \item A lista recarrega com a quantidade nova
+    \item Se já estiver em 0, o próximo clique cai no catch
+  \end{enumerate}
+
+  \vspace{0.5em}
+  No Network: um POST para \texttt{.../retirar}.\\
+  Se recusar, o status é 400.
+\end{frame}
+
+\begin{frame}{Conferindo a retirada}
+  \begin{itemize}
+    \item [ ] Grampeador começa com 2
+    \item [ ] Dois cliques em Retirar 1 deixam quantidade 0
+    \item [ ] O terceiro clique mostra ``Quantidade insuficiente''
+    \item [ ] A quantidade \textbf{não} fica negativa
+    \item [ ] Caneta e Caderno não mudam nesse teste
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Erros que mais aparecem}
+  \begin{itemize}
+    \item Porta 8080 ocupada
+    \item PUT cria duplicado --- ainda está no POST,
+          ou o Controller dá \texttt{add}
+    \item Editar preenche sempre o último --- faltou
+          \texttt{evento.target}
+    \item Quantidade vira texto --- faltou \texttt{Number}
+    \item Retirar não avisa na tela --- faltou \texttt{catch}
+    \item Import de \texttt{ResponseStatusException} errado
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Desafios}
+
+\begin{frame}{Agora é com vocês}
+  Continuem no projeto \textbf{laboratorio}.\\
+  Mesmos arquivos.
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Retirar a quantidade digitada
+    \item Não cadastrar se o nome estiver vazio
+    \item No Editar, buscar o material pelo GET do id
+  \end{enumerate}
+
+  \vspace{0.5em}
+  Salve $\rightarrow$ reinicie se precisar $\rightarrow$ teste no navegador.\\
+  F12, aba Network.
+\end{frame}
+
+\begin{frame}{Desafio 1 --- quantidade da retirada}
+  \onde{\texttt{index.html} e \texttt{static/js/app.js}}
+
+  Hoje o botão sempre manda 1.
+
+  \vspace{0.4em}
+  Coloquem um input na página, por exemplo
+  \texttt{id="qtd-retirar"}.
+
+  \vspace{0.4em}
+  No clique, leiam esse valor com \texttt{Number}\\
+  e mandem no JSON no lugar do 1.
+
+  \vspace{0.4em}
+  Testem retirar 3 de um item que tem 2:\\
+  tem que recusar.
+\end{frame}
+
+\begin{frame}{Desafio 2 --- nome vazio}
+  \onde{\texttt{static/js/app.js}, no submit}
+
+  Antes do Axios, se o nome estiver vazio,
+  mostrem uma mensagem e deem \texttt{return}.
+
+  \vspace{0.5em}
+  O POST nem chega a sair.\\
+  A lista permanece igual.
+\end{frame}
+
+\begin{frame}[fragile]{Desafio 3 --- Editar busca pelo id}
+  \onde{\texttt{static/js/app.js}}
+
+  No clique de Editar, em vez de copiar nome e quantidade
+  dos \texttt{data-...}, chamem:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+axios.get("/api/materiais/" + id)
+  .then(function (resposta) {
+    var material = resposta.data;
+    idEditando = material.id;
+    document.getElementById("nome").value = material.nome;
+    document.getElementById("quantidade").value =
+      material.quantidade;
+  });
+\end{lstlisting}
+
+  Vocês passam a usar o GET por id de verdade.
+\end{frame}
+
+\begin{frame}{Extra}
+  Se terminarem os três, ainda no \textbf{laboratorio}:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Não permitir quantidade negativa no cadastro
+    \item Mostrar o id na lista
+    \item Depois de retirar com sucesso, limpar a mensagem
+          de erro antiga
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Checklist}
+  \begin{itemize}
+    \item [ ] Estou no projeto \texttt{laboratorio}?
+    \item [ ] PUT não dá \texttt{add} na lista?
+    \item [ ] \texttt{idEditando} volta para vazio depois de salvar?
+    \item [ ] GET \texttt{/api/materiais/2} devolve um só?
+    \item [ ] Retirar recusa quando não há quantidade?
+    \item [ ] O \texttt{catch} preenche \texttt{\#mensagem}?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Intervalo}
+  \begin{center}
+    \Large Retomamos às \textbf{20h20}\\[0.8em]
+    \normalsize
+    Fechem o \texttt{laboratorio}.\\
+    Parem o Spring.\\
+    Na segunda parte abrimos o \textbf{StockSales}.
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{Parte 2 --- StockSales}
+
+\begin{frame}{Mudamos de projeto}
+  \onde{Agora é o projeto \textbf{StockSales}.\\
+        O laboratorio já está encerrado.}
+
+  Parem o Spring do laboratorio.\\
+  Abram a pasta do StockSales e subam de novo.
+\end{frame}
+
+\begin{frame}{Onde o StockSales parou}
+  Em produtos, vocês já têm:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Lista na classe do Controller
+    \item GET, POST e DELETE
+    \item Formulário na tela e botão Excluir
+  \end{itemize}
+
+  \vspace{0.5em}
+  Ainda não tem PUT.\\
+  Ainda não tem clientes.\\
+  Ainda não tem venda.
+\end{frame}
+
+\begin{frame}{O que vamos fazer no StockSales}
+  \begin{enumerate}
+    \item PUT de produto --- o mesmo raciocínio do laboratorio
+    \item Cadastro de cliente: GET e POST
+    \item Venda de \textbf{um} produto, com baixa de estoque
+  \end{enumerate}
+
+  \vspace{0.5em}
+  É o que acabamos de treinar, com os nomes da loja:\\
+  produto, cliente, estoque.
+\end{frame}
+
+\begin{frame}[fragile]{Produto.java --- construtor vazio}
+  \onde{Projeto \textbf{StockSales}\\
+        \texttt{model/Produto.java}}
+
+  Se ainda não tiver este construtor, acrescentem.
+  Mantenham o outro.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public Produto() {
+}
+\end{lstlisting}
+
+  Sem ele, POST e PUT de produto quebram.
+\end{frame}
+
+\begin{frame}[fragile]{PUT de produto}
+  \onde{\texttt{controller/ProdutoController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PutMapping("/api/produtos/{id}")
+public Produto atualizar(@PathVariable int id,
+                         @RequestBody Produto dados) {
+  for (int i = 0; i < produtos.size(); i++) {
+    if (produtos.get(i).getId() == id) {
+      produtos.get(i).setNome(dados.getNome());
+      produtos.get(i).setPreco(dados.getPreco());
+      produtos.get(i).setEstoque(dados.getEstoque());
+      return produtos.get(i);
+    }
+  }
+  return null;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Tela de produtos --- Editar}
+  \onde{\texttt{static/js/produtos.js}}
+
+  Copiem o esquema do laboratorio:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Variável \texttt{idEditando}
+    \item Botão Editar com \texttt{data-id}
+    \item Submit: se o id estiver vazio $\rightarrow$ POST;
+          se tiver id $\rightarrow$ PUT
+    \item Preço e estoque com \texttt{Number}
+  \end{itemize}
+
+  \vspace{0.4em}
+  No HTML, o form de produtos que vocês já usam no POST
+  serve para o PUT.
+\end{frame}
+
+\begin{frame}{Três cadastros, uma loja}
+  Daqui a pouco teremos:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item produtos
+    \item clientes
+    \item vendas
+  \end{itemize}
+
+  \vspace{0.5em}
+  Cada um pode ter o seu Controller.\\
+  As listas precisam ser as \textbf{mesmas}, senão a venda
+  não acha o produto e o estoque não baixa.
+
+  \vspace{0.5em}
+  Por isso as listas saem dos Controllers
+  e vão para uma classe só: \texttt{Dados}.
+\end{frame}
+
+\begin{frame}[fragile]{Classe Dados}
+  \onde{Projeto \textbf{StockSales}\\
+        Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/stocksales/Dados.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+package com.entra21.stocksales;
+
+import java.util.ArrayList;
+import com.entra21.stocksales.model.Produto;
+
+public class Dados {
+  public static ArrayList<Produto> produtos = new ArrayList<>();
+  public static int proximoIdProduto = 1;
+}
+\end{lstlisting}
+
+  \texttt{static} = uma lista só, visível para qualquer classe
+  do projeto.
+\end{frame}
+
+\begin{frame}[fragile]{Mover a lista de produtos}
+  \onde{\texttt{ProdutoController.java}}
+
+  Tirem os campos \texttt{produtos} e \texttt{proximoId}
+  da classe.
+
+  \vspace{0.3em}
+  O construtor passa a gravar em \texttt{Dados}:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+public ProdutoController() {
+  if (Dados.produtos.isEmpty()) {
+    Dados.produtos.add(new Produto(1, "Teclado Mecanico", 250, 12));
+    Dados.produtos.add(new Produto(2, "Mouse Gamer", 120, 30));
+    Dados.produtos.add(new Produto(3, "Monitor 24", 900, 8));
+    Dados.produtos.add(new Produto(4, "Headset", 200, 15));
+    Dados.proximoIdProduto = 5;
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{GET, POST, PUT e DELETE usam Dados}
+  \onde{\texttt{ProdutoController.java}}
+
+  Troquem \texttt{produtos} por \texttt{Dados.produtos}.\\
+  Troquem \texttt{proximoId} por \texttt{Dados.proximoIdProduto}.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/produtos")
+public ArrayList<Produto> listarProdutos() {
+  return Dados.produtos;
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O \texttt{if (Dados.produtos.isEmpty())} evita duplicar
+  o seed se o Spring criar o Controller de novo.
+\end{frame}
+
+\begin{frame}[fragile]{Classe Cliente}
+  \onde{Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/stocksales/model/Cliente.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+public class Cliente {
+  private int id;
+  private String nome;
+  private String email;
+  private String telefone;
+
+  public Cliente() {}
+
+  public Cliente(int id, String nome, String email, String telefone) {
+    this.id = id;
+    this.nome = nome;
+    this.email = email;
+    this.telefone = telefone;
+  }
+}
+\end{lstlisting}
+
+  Completem os gets e sets dos quatro atributos.
+\end{frame}
+
+\begin{frame}[fragile]{Listas de cliente em Dados}
+  \onde{\texttt{Dados.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public static ArrayList<Cliente> clientes = new ArrayList<>();
+public static int proximoIdCliente = 1;
+\end{lstlisting}
+
+  Import de \texttt{Cliente} no topo do arquivo.
+\end{frame}
+
+\begin{frame}[fragile]{ClienteController --- seed e GET}
+  \onde{Arquivo novo:\\
+        \texttt{controller/ClienteController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@RestController
+public class ClienteController {
+
+  public ClienteController() {
+    if (Dados.clientes.isEmpty()) {
+      Dados.clientes.add(new Cliente(1, "Ana", "ana@email.com", "1199"));
+      Dados.clientes.add(new Cliente(2, "Bruno", "bruno@email.com", "1188"));
+      Dados.clientes.add(new Cliente(3, "Carla", "carla@email.com", "1177"));
+      Dados.proximoIdCliente = 4;
+    }
+  }
+
+  @GetMapping("/api/clientes")
+  public ArrayList<Cliente> listar() {
+    return Dados.clientes;
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{POST de cliente}
+  \onde{Ainda em \texttt{ClienteController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PostMapping("/api/clientes")
+public Cliente cadastrar(@RequestBody Cliente cliente) {
+  cliente.setId(Dados.proximoIdCliente);
+  Dados.proximoIdCliente = Dados.proximoIdCliente + 1;
+  Dados.clientes.add(cliente);
+  return cliente;
+}
+\end{lstlisting}
+
+  Testem \texttt{/api/clientes} no navegador:\\
+  Ana, Bruno e Carla.
+\end{frame}
+
+\begin{frame}[fragile]{Tela de clientes}
+  \onde{Arquivos novos:\\
+        \texttt{static/clientes.html}\\
+        \texttt{static/js/clientes.js}}
+
+  Copiem o desenho de produtos:
+
+  \vspace{0.3em}
+  \begin{itemize}
+    \item Formulário: nome, e-mail, telefone
+    \item Lista na \texttt{<ul>}
+    \item \texttt{carregarClientes} com GET
+    \item Submit com POST e \texttt{preventDefault}
+  \end{itemize}
+
+  \vspace{0.4em}
+  Na home, um link para \texttt{/clientes.html}.
+\end{frame}
+
+\begin{frame}{O que é uma venda nesta aula}
+  Uma venda, hoje, tem \textbf{um} cliente e \textbf{um} produto.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Quem compra: o cliente
+    \item O quê: um produto
+    \item Quantas unidades
+    \item Total = preço $\times$ quantidade
+  \end{itemize}
+
+  \vspace{0.5em}
+  Ao confirmar: o estoque daquele produto diminui.\\
+  Se não houver estoque, a venda \textbf{não} é gravada.
+\end{frame}
+
+\begin{frame}[fragile]{Classe Venda}
+  \onde{Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/stocksales/model/Venda.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Venda {
+  private int id;
+  private int clienteId;
+  private int produtoId;
+  private int quantidade;
+  private double total;
+
+  public Venda() {
+  }
+}
+\end{lstlisting}
+
+  Construtor vazio + gets e sets dos cinco atributos.
+\end{frame}
+
+\begin{frame}[fragile]{Vendas em Dados}
+  \onde{\texttt{Dados.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public static ArrayList<Venda> vendas = new ArrayList<>();
+public static int proximoIdVenda = 1;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{O POST da venda}
+  O JavaScript manda só isto:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{"clienteId": 1, "produtoId": 2, "quantidade": 3}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O servidor faz o resto:
+  \begin{enumerate}
+    \item Achar o cliente
+    \item Achar o produto
+    \item Se \texttt{estoque < quantidade}, recusar
+    \item \texttt{total = preco * quantidade}
+    \item Diminuir o estoque
+    \item Guardar a venda e devolver o JSON
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Começar o VendaController}
+  \onde{Arquivo novo:\\
+        \texttt{controller/VendaController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@RestController
+public class VendaController {
+\end{lstlisting}
+
+  Os métodos GET e POST entram \textbf{dentro} desta classe.\\
+  O POST é longo: vamos escrever em três passos.
+\end{frame}
+
+\begin{frame}[fragile]{VendaController --- achar cliente}
+  \onde{\texttt{VendaController.java}, método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PostMapping("/api/vendas")
+public Venda cadastrar(@RequestBody Venda pedido) {
+  Cliente cliente = null;
+  for (int i = 0; i < Dados.clientes.size(); i++) {
+    if (Dados.clientes.get(i).getId() == pedido.getClienteId()) {
+      cliente = Dados.clientes.get(i);
+    }
+  }
+  if (cliente == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Cliente nao encontrado");
+  }
+\end{lstlisting}
+
+  O método ainda não acabou. Continua no próximo slide.
+\end{frame}
+
+\begin{frame}[fragile]{VendaController --- achar produto}
+  \onde{Ainda no mesmo método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+  Produto produto = null;
+  for (int i = 0; i < Dados.produtos.size(); i++) {
+    if (Dados.produtos.get(i).getId() == pedido.getProdutoId()) {
+      produto = Dados.produtos.get(i);
+    }
+  }
+  if (produto == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Produto nao encontrado");
+  }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{VendaController --- estoque e gravação}
+  \onde{Ainda no mesmo método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+  if (produto.getEstoque() < pedido.getQuantidade()) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Estoque insuficiente");
+  }
+
+  pedido.setId(Dados.proximoIdVenda);
+  Dados.proximoIdVenda = Dados.proximoIdVenda + 1;
+  pedido.setTotal(produto.getPreco() * pedido.getQuantidade());
+  produto.setEstoque(
+      produto.getEstoque() - pedido.getQuantidade());
+  Dados.vendas.add(pedido);
+  return pedido;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{GET das vendas}
+  \onde{Ainda em \texttt{VendaController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/api/vendas")
+public ArrayList<Venda> listar() {
+  return Dados.vendas;
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Não esqueçam os imports:
+  \texttt{HttpStatus}, \texttt{ResponseStatusException},
+  \texttt{Dados}, \texttt{Cliente}, \texttt{Produto}, \texttt{Venda}.
+\end{frame}
+
+\begin{frame}[fragile]{A tela precisa de um \texttt{select}}
+  Em vez de a pessoa lembrar o id, a página mostra uma lista
+  para escolher.
+
+  \vspace{0.4em}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+<select id="clienteId"></select>
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Cada \texttt{<option>} tem o \texttt{value} = id
+  e o texto = nome.
+
+  \vspace{0.5em}
+  O JS preenche as opções com o GET de clientes
+  e o GET de produtos.
+\end{frame}
+
+\begin{frame}[fragile]{vendas-nova.html}
+  \onde{\texttt{static/vendas-nova.html}, arquivo novo}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+<h1>Nova venda</h1>
+<a href="/">Voltar</a>
+<label>Cliente</label>
+<select id="clienteId"></select>
+<label>Produto</label>
+<select id="produtoId"></select>
+<label>Quantidade</label>
+<input id="quantidade" type="number">
+<button id="btn-vender" type="button">Confirmar venda</button>
+<p id="mensagem"></p>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/js/vendas-nova.js"></script>
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Preencher os selects}
+  \onde{\texttt{static/js/vendas-nova.js}, arquivo novo}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+function carregarClientes() {
+  axios.get("/api/clientes").then(function (resposta) {
+    var select = document.getElementById("clienteId");
+    select.innerHTML = "";
+    var clientes = resposta.data;
+    for (var i = 0; i < clientes.length; i++) {
+      var opcao = document.createElement("option");
+      opcao.value = clientes[i].id;
+      opcao.textContent = clientes[i].nome;
+      select.appendChild(opcao);
+    }
+  });
+}
+\end{lstlisting}
+
+  O de produtos é igual, com nome e estoque no texto.
+\end{frame}
+
+\begin{frame}[fragile]{Select de produtos}
+  \onde{Ainda em \texttt{vendas-nova.js}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+function carregarProdutos() {
+  axios.get("/api/produtos").then(function (resposta) {
+    var select = document.getElementById("produtoId");
+    select.innerHTML = "";
+    var produtos = resposta.data;
+    for (var i = 0; i < produtos.length; i++) {
+      var opcao = document.createElement("option");
+      opcao.value = produtos[i].id;
+      opcao.textContent = produtos[i].nome
+        + " --- estoque: " + produtos[i].estoque;
+      select.appendChild(opcao);
+    }
+  });
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Confirmar a venda --- o JSON}
+  \onde{Ainda em \texttt{vendas-nova.js}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+document.getElementById("btn-vender")
+  .addEventListener("click", function () {
+    var dados = {
+      clienteId: Number(document.getElementById("clienteId").value),
+      produtoId: Number(document.getElementById("produtoId").value),
+      quantidade: Number(document.getElementById("quantidade").value)
+    };
+\end{lstlisting}
+
+  Os três valores vão como número, não como texto.
+\end{frame}
+
+\begin{frame}[fragile]{Confirmar a venda --- enviar}
+  \onde{Ainda no clique de Confirmar}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+    axios.post("/api/vendas", dados)
+      .then(function () {
+        document.getElementById("mensagem").textContent =
+          "Venda registrada";
+        carregarProdutos();
+      })
+      .catch(function () {
+        document.getElementById("mensagem").textContent =
+          "Nao foi possivel registrar a venda";
+      });
+  });
+
+carregarClientes();
+carregarProdutos();
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Histórico de vendas}
+  \onde{\texttt{static/vendas.html} e \texttt{static/js/vendas.js}}
+
+  Página com uma \texttt{<ul id="lista-vendas">}.
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+axios.get("/api/vendas").then(function (resposta) {
+  var vendas = resposta.data;
+  var lista = document.getElementById("lista-vendas");
+  lista.innerHTML = "";
+  for (var i = 0; i < vendas.length; i++) {
+    var li = document.createElement("li");
+    li.textContent = "Cliente " + vendas[i].clienteId
+      + " - produto " + vendas[i].produtoId
+      + " - qtd " + vendas[i].quantidade
+      + " - total R$ " + vendas[i].total;
+    lista.appendChild(li);
+  }
+});
+\end{lstlisting}
+
+  Na home: links para nova venda e para o histórico.
+\end{frame}
+
+\begin{frame}{O caminho da venda}
+  \begin{enumerate}
+    \item A pessoa escolhe Ana, Mouse Gamer, quantidade 2
+    \item JS manda POST \texttt{/api/vendas}
+    \item Servidor acha cliente e produto nas listas de
+          \texttt{Dados}
+    \item Confere estoque, calcula total, diminui estoque
+    \item A tela de produtos, ao recarregar, já mostra
+          o estoque menor
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Conferindo no StockSales}
+  \begin{itemize}
+    \item [ ] Editar produto não duplica
+    \item [ ] \texttt{/api/clientes} lista Ana, Bruno e Carla
+    \item [ ] Dá para cadastrar um cliente novo
+    \item [ ] Nova venda baixa o estoque
+    \item [ ] Vender acima do estoque mostra a mensagem
+    \item [ ] Histórico lista a venda com o total
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Extra no StockSales}
+  Se der tempo:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item PUT e DELETE de cliente
+    \item No histórico, mostrar o \textbf{nome} do cliente
+          e do produto, não só o id. Percorram as listas
+          de \texttt{Dados} no JS, ou incluam os nomes
+          na resposta da venda
+    \item Não permitir quantidade 0 ou negativa
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O que não entra hoje}
+  \begin{itemize}
+    \item Vários produtos na mesma venda
+    \item Cancelar venda e devolver estoque
+    \item Banco de dados
+    \item Login
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{block}{Meta no StockSales}
+    PUT de produto.\\
+    Clientes cadastráveis.\\
+    Uma venda de um item, com estoque baixando.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Critérios de aceite}
+  \begin{itemize}
+    \item [ ] Produto pode ser alterado
+    \item [ ] Cliente aparece na lista e no select da venda
+    \item [ ] Venda grava total no servidor
+    \item [ ] Estoque diminui
+    \item [ ] Estoque insuficiente recusa a venda inteira
+    \item [ ] Home leva a produtos, clientes, nova venda
+              e histórico
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Recapitulando}
+
+\begin{frame}{O que vimos hoje}
+  \begin{enumerate}
+    \item PUT altera um item que já existe, pelo id
+    \item GET com id devolve um só
+    \item Retirar / vender é uma ação com regra
+    \item Se a regra falhar, o servidor recusa e o JS usa catch
+    \item No StockSales, as listas ficam em \texttt{Dados}
+          para todo mundo ver a mesma loja
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Na próxima aula}
+  \begin{block}{Aula 05}
+    \begin{itemize}
+      \item Organizar o código: as listas saem do
+            \texttt{static} de \texttt{Dados}
+      \item Validação
+      \item Erros HTTP com mais clareza
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.6em}
+  Tragam o StockSales com venda de um item funcionando.
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \Huge Obrigado!\\[1.2em]
+    \normalsize Mauricio Duailibi Neto\\
+    Turma Java Entra21
+  \end{center}
+\end{frame}
+
+\end{document}

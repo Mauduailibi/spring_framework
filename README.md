@@ -19,7 +19,9 @@ Detalhes passo a passo estão nos slides da Aula 01.
 spring_framework/
 ├── slides/                 ← slides das aulas (LaTeX Beamer → PDF)
 ├── ola-spring/             ← projeto feito juntos na Aula 01
-└── desafio-saudacao/       ← primeiro desafio (feito sozinho)
+├── aula2/                  ← exercícios da Aula 02
+├── laboratorio/            ← exercícios da primeira parte, a partir da Aula 04
+└── stocksales/             ← projeto da loja, segunda parte de cada aula
 ```
 
 ## Como rodar um projeto Spring Boot
@@ -39,9 +41,9 @@ Depois abra no navegador: [http://localhost:8080](http://localhost:8080)
 Com LaTeX instalado (TeX Live / MiKTeX):
 
 ```bash
-cd slides/aula-01-introducao
-pdflatex slides-aula-01.tex
-pdflatex slides-aula-01.tex
+cd slides/aula-04-put-vendas
+pdflatex slides-aula-04.tex
+pdflatex slides-aula-04.tex
 ```
 
 ## Disciplinas anteriores

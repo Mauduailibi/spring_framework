@@ -322,8 +322,8 @@
 
 \begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
 @GetMapping("/api/alunos")
-public List<Aluno> listar() {
-  List<Aluno> lista = new ArrayList<>();
+public ArrayList<Aluno> listar() {
+  ArrayList<Aluno> lista = new ArrayList<>();
   lista.add(new Aluno(1, "Ana", "Entra21"));
   return lista;
 }
@@ -342,10 +342,10 @@ public List<Aluno> listar() {
 @RestController
 public class AlunoController {
 
-  private List<Aluno> alunos = new ArrayList<>();
+  private ArrayList<Aluno> alunos = new ArrayList<>();
 
   @GetMapping("/api/alunos")
-  public List<Aluno> listar() {
+  public ArrayList<Aluno> listar() {
     return alunos;
   }
 }
@@ -511,7 +511,7 @@ package com.entra21.cadastro;
 @RestController
 public class AlunoController {
 
-  private List<Aluno> alunos = new ArrayList<>();
+  private ArrayList<Aluno> alunos = new ArrayList<>();
   private int proximoId = 1;
 
   public AlunoController() {
@@ -523,7 +523,7 @@ public class AlunoController {
 }
 \end{lstlisting}
 
-  Não esqueçam os imports de \texttt{List}, \texttt{ArrayList}
+  Não esqueçam os imports de \texttt{ArrayList}
   e \texttt{@RestController}.
 \end{frame}
 
@@ -533,7 +533,7 @@ public class AlunoController {
 
 \begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
 @GetMapping("/api/alunos")
-public List<Aluno> listar() {
+public ArrayList<Aluno> listar() {
   return alunos;
 }
 \end{lstlisting}
