@@ -9,12 +9,6 @@ public class Material {
 	public Material() {
 	}
 
-	public Material(int id, String nome, int quantidade) {
-		this.id = id;
-		this.nome = nome;
-		this.quantidade = quantidade;
-	}
-
 	public int getId() {
 		return id;
 	}

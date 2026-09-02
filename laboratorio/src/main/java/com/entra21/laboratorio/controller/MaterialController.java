@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,10 +19,7 @@ public class MaterialController {
 	private int proximoId = 1;
 
 	public MaterialController() {
-		materiais.add(new Material(1, "Caneta", 10));
-		materiais.add(new Material(2, "Caderno", 5));
-		materiais.add(new Material(3, "Grampeador", 2));
-		proximoId = 4;
+		proximoId = 1;
 	}
 
 	@GetMapping("/api/materiais")
@@ -34,6 +32,7 @@ public class MaterialController {
 		material.setId(proximoId);
 		proximoId = proximoId + 1;
 		materiais.add(material);
+		System.out.println(materiais);
 		return material;
 	}
 
@@ -45,6 +44,18 @@ public class MaterialController {
 				return;
 			}
 		}
+	}
+
+	@PutMapping("/api/materiais/{id}")
+	public Material atualizar(@PathVariable int id, @RequestBody Material dados) {
+		for(int i = 0; i < materiais.size(); i++) {
+			if(materiais.get(i).getId() == id) {
+				materiais.get(i).setNome(dados.getNome());
+				materiais.get(i).setQuantidade(dados.getQuantidade());
+				return materiais.get(i);
+			}
+		}
+		return null;
 	}
 
 }
