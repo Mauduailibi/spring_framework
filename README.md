@@ -20,6 +20,7 @@ spring_framework/
 ├── slides/                 ← slides das aulas (LaTeX Beamer → PDF)
 ├── ola-spring/             ← projeto feito juntos na Aula 01
 ├── aula2/                  ← exercícios da Aula 02
+├── cadastro-alunos/        ← CRUD da Aula 03
 ├── laboratorio/            ← exercícios da primeira parte, a partir da Aula 04
 └── stocksales/             ← projeto da loja, segunda parte de cada aula
 ```
