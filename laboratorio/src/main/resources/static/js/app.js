@@ -47,8 +47,10 @@ form.addEventListener("submit", function (evento) {
     var nome = document.getElementById("nome").value;
     var quantidade = Number(document.getElementById("quantidade").value);
 
-    console.log(idEditando);
-    
+    if(nome === "" || quantidade <= 0) {
+        alert("Preencha todos os campos corretamente.");
+        return;
+    }
 
     if(idEditando === "") {
         axios.post("/api/materiais", {
