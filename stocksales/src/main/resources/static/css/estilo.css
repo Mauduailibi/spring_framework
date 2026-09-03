@@ -251,19 +251,23 @@ form {
     flex: 0 0 140px;
 }
 
-.campo label {
+.campo label,
+form > label,
+.conteudo > label {
     font-size: 0.82rem;
     font-weight: 700;
     color: var(--cor-suave);
 }
 
-form input {
+form input,
+form select,
+.campo select {
     width: 100%;
     padding: 13px 14px;
 
     font-size: 1rem;
+    font-family: inherit;
     color: var(--cor-texto);
-    background: #ffffff;
 
     border: 1px solid #cbd5e1;
     border-radius: 10px;
@@ -272,9 +276,20 @@ form input {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-form input:focus {
+form input {
+    background: #ffffff;
+}
+
+form input:focus,
+form select:focus,
+.campo select:focus {
     border-color: var(--cor-acao);
     box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.14);
+}
+
+form select,
+.campo select {
+    padding-right: 40px;
 }
 
 form input::placeholder {
@@ -307,9 +322,111 @@ form button:active {
 }
 
 
-/* Lista de produtos (preenchida pelo JS) */
+/* Select (Aula 05 — cliente, produto, filtros) */
 
-#lista-produtos {
+select {
+    width: 100%;
+    padding: 13px 40px 13px 14px;
+
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--cor-texto);
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20'%3E%3Cpath fill='%235b7470' d='M5.3 7.3a1 1 0 0 1 1.4 0L10 10.58l3.3-3.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.42z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select:focus {
+    border-color: var(--cor-acao);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.14);
+}
+
+
+/* Filtro (ex.: filtrar lista por categoria ou cliente) */
+
+p:has(#filtro-categoria),
+p:has(select[id*="filtro"]),
+.filtro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    margin: 0 0 20px;
+    padding: 16px 20px;
+
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+}
+
+p:has(#filtro-categoria) label,
+p:has(select[id*="filtro"]) label,
+.filtro label {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--cor-suave);
+}
+
+#filtro-categoria,
+select[id*="filtro"] {
+    flex: 1;
+    min-width: 180px;
+}
+
+
+/* Mensagens da página (some quando está vazia) */
+
+#mensagem {
+    margin: 0;
+    text-align: center;
+    font-weight: 600;
+}
+
+#mensagem:empty {
+    display: none;
+}
+
+#mensagem:not(:empty) {
+    margin: 0 0 20px;
+    padding: 14px 18px;
+
+    color: #9a3412;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-radius: 12px;
+}
+
+#mensagem.ok:not(:empty) {
+    color: #166534;
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+}
+
+#mensagem.erro:not(:empty) {
+    color: #991b1b;
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+
+/* Listas preenchidas pelo JS */
+
+#lista-produtos,
+#lista-clientes,
+#lista-vendas {
     margin: 0;
     padding: 0;
     list-style: none;
@@ -326,7 +443,31 @@ form button:active {
     border-radius: var(--raio);
 }
 
-#lista-produtos li {
+#lista-clientes:empty::before {
+    content: "Nenhum cliente cadastrado ainda.";
+    display: block;
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--cor-suave);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px dashed var(--cor-borda);
+    border-radius: var(--raio);
+}
+
+#lista-vendas:empty::before {
+    content: "Nenhuma venda registrada ainda.";
+    display: block;
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--cor-suave);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px dashed var(--cor-borda);
+    border-radius: var(--raio);
+}
+
+#lista-produtos li,
+#lista-clientes li,
+#lista-vendas li {
     margin-bottom: 10px;
     padding: 16px 18px 16px 20px;
 
@@ -342,12 +483,16 @@ form button:active {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-#lista-produtos li:hover {
+#lista-produtos li:hover,
+#lista-clientes li:hover,
+#lista-vendas li:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 18px rgba(15, 76, 74, 0.08);
 }
 
-#lista-produtos li button {
+#lista-produtos li button,
+#lista-clientes li button,
+#lista-vendas li button {
     margin-left: 10px;
     padding: 7px 12px;
 
@@ -385,7 +530,10 @@ form button:active {
 
     .campo,
     .campo-curto,
-    form button {
+    form button,
+    form select,
+    #filtro-categoria,
+    select[id*="filtro"] {
         width: 100%;
         flex: none;
     }

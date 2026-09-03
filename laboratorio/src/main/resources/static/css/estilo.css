@@ -64,6 +64,8 @@ form {
     max-width: 800px;
 
     display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
     gap: 12px;
 
     padding: 24px;
@@ -80,19 +82,32 @@ form {
 }
 
 
-/* Inputs */
+/* Labels do formulário (ex.: Categoria) */
 
-form input {
+form label {
+    flex: 0 0 auto;
+
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #475569;
+
+    align-self: center;
+}
+
+
+/* Inputs e selects */
+
+form input,
+form select {
     flex: 1;
 
-    min-width: 0;
+    min-width: 140px;
 
     padding: 14px 16px;
 
     font-size: 1rem;
 
     color: #1e293b;
-    background: #ffffff;
 
     border: 1px solid #cbd5e1;
     border-radius: 10px;
@@ -105,7 +120,12 @@ form input {
         transform 0.2s;
 }
 
-form input:focus {
+form input {
+    background: #ffffff;
+}
+
+form input:focus,
+form select:focus {
     border-color: #2563eb;
 
     box-shadow:
@@ -159,26 +179,161 @@ form button:active {
 }
 
 
-/* Área de mensagens */
+/* Select (dentro ou fora do form) */
+
+select {
+    width: 100%;
+    max-width: 800px;
+
+    padding: 14px 40px 14px 16px;
+
+    font-size: 1rem;
+    font-family: inherit;
+    color: #1e293b;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20'%3E%3Cpath fill='%2364748b' d='M5.3 7.3a1 1 0 0 1 1.4 0L10 10.58l3.3-3.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.42z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+select:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+form select {
+    width: auto;
+    max-width: none;
+    padding-right: 40px;
+}
+
+
+/* Filtro (ex.: Filtrar por categoria) */
+
+p:has(#filtro-categoria),
+p:has(select[id*="filtro"]),
+.filtro {
+    width: 100%;
+    max-width: 800px;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    margin: 0 0 8px;
+    padding: 16px 20px;
+
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+p:has(#filtro-categoria) label,
+p:has(select[id*="filtro"]) label,
+.filtro label {
+    margin: 0;
+
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #475569;
+}
+
+#filtro-categoria,
+select[id*="filtro"] {
+    flex: 1;
+    min-width: 180px;
+    max-width: none;
+}
+
+
+/* Área de mensagens (some quando está vazia) */
 
 #mensagem {
     width: 100%;
     max-width: 800px;
 
-    min-height: 1.5em;
-
-    margin: 18px 0;
-
+    margin: 0;
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
+}
 
+#mensagem:empty {
+    display: none;
+}
+
+#mensagem:not(:empty) {
+    margin: 18px 0;
+    padding: 14px 18px;
+
+    color: #9a3412;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-radius: 12px;
+}
+
+#mensagem.ok:not(:empty) {
+    color: #166534;
+    background: #f0fdf4;
+    border-color: #86efac;
+}
+
+#mensagem.erro:not(:empty) {
+    color: #991b1b;
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+
+/* Títulos de seção e label solto (categorias, etiquetas) */
+
+h2 {
+    width: 100%;
+    max-width: 800px;
+
+    margin: 28px 0 12px;
+
+    font-size: 1.25rem;
+    color: #0f172a;
+    text-align: left;
+}
+
+body > label {
+    width: 100%;
+    max-width: 800px;
+
+    margin: 0 0 8px;
+
+    font-size: 0.9rem;
+    font-weight: 700;
     color: #475569;
+    text-align: left;
+}
+
+#etiquetaId {
+    margin-bottom: 24px;
 }
 
 
 /* Lista */
 
-#lista-materiais {
+#lista-materiais,
+#lista-categorias {
     width: 100%;
     max-width: 800px;
 
@@ -191,7 +346,8 @@ form button:active {
 
 /* Itens adicionados dinamicamente */
 
-#lista-materiais li {
+#lista-materiais li,
+#lista-categorias li {
     display: flex;
     align-items: center;
 
@@ -218,7 +374,8 @@ form button:active {
 
 /* Todos os botões */
 
-#lista-materiais li button {
+#lista-materiais li button,
+#lista-categorias li button {
     padding: 8px 14px;
 
     border: none;
@@ -237,7 +394,8 @@ form button:active {
 
 /* Primeiro botão vai para a direita */
 
-#lista-materiais li button:first-of-type {
+#lista-materiais li button:first-of-type,
+#lista-categorias li button:first-of-type {
     margin-left: auto;
 }
 
@@ -258,12 +416,14 @@ form button:active {
 
 /* Botão de excluir */
 
-#lista-materiais li button.excluir {
+#lista-materiais li button.excluir,
+#lista-categorias li button.excluir {
     color: white;
     background: #ef4444;
 }
 
-#lista-materiais li button.excluir:hover {
+#lista-materiais li button.excluir:hover,
+#lista-categorias li button.excluir:hover {
     background: #dc2626;
 
     transform: scale(1.05);
@@ -284,9 +444,18 @@ form button:active {
 
     form {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    form button {
+    form label {
+        align-self: flex-start;
+    }
+
+    form input,
+    form select,
+    form button,
+    #filtro-categoria,
+    select[id*="filtro"] {
         width: 100%;
     }
 
