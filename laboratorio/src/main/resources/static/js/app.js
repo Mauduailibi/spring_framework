@@ -1,6 +1,25 @@
 var lista = document.getElementById("lista-materiais");
 var form = document.getElementById("form-material");
+var selectCategoria = document.getElementById("select-categoria");
 var idEditando = "";
+var categorias = [];
+
+// criar função que recebe um id de categoria e retorna o nome da categoria
+
+function carregarCategorias() {
+    axios.get("/api/categorias").then(function(resposta) {
+        categorias = resposta.data;
+
+        selectCategoria.innerHTML = "";
+
+        for(var i = 0; i < categorias.length; i++) {
+            var opcao = document.createElement("option");
+            opcao.value = categorias[i].id;
+            opcao.textContent = categorias[i].nome;
+            selectCategoria.appendChild(opcao);
+        }
+    })
+}
 
 function carregarMateriais() {
     axios.get("/api/materiais").then(function (resposta) {
@@ -8,10 +27,14 @@ function carregarMateriais() {
         lista.innerHTML = "";
 
         for (var i = 0; i < materiais.length; i++) {
+            console.log(materiais[i]);
+
             var material = materiais[i];
             var li = document.createElement("li");
-            li.textContent = material.nome + " - quantidade: " + material.quantidade + " ";
-
+            li.textContent = material.nome + 
+                " - quantidade: " + material.quantidade + 
+                " - categoria: " // chamar a funcao de pegar o nome da categoria passando -> material.categoriaId;
+        
             var botao = document.createElement("button");
             botao.textContent = "Excluir";
             botao.setAttribute("data-id", material.id);
@@ -46,6 +69,7 @@ form.addEventListener("submit", function (evento) {
 
     var nome = document.getElementById("nome").value;
     var quantidade = Number(document.getElementById("quantidade").value);
+    var categoriaId = Number(selectCategoria.value);
 
     if(nome === "" || quantidade <= 0) {
         alert("Preencha todos os campos corretamente.");
@@ -55,7 +79,8 @@ form.addEventListener("submit", function (evento) {
     if(idEditando === "") {
         axios.post("/api/materiais", {
             nome: nome,
-            quantidade: quantidade
+            quantidade: quantidade,
+            categoriaId: categoriaId
         }).then(function () {
             document.getElementById("nome").value = "";
             document.getElementById("quantidade").value = "";
@@ -75,3 +100,4 @@ form.addEventListener("submit", function (evento) {
 });
 
 carregarMateriais();
+carregarCategorias();

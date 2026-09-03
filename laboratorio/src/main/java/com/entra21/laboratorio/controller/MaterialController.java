@@ -10,37 +10,35 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.entra21.laboratorio.data.Dados;
 import com.entra21.laboratorio.model.Material;
 
 @RestController
 public class MaterialController {
 
-	private ArrayList<Material> materiais = new ArrayList<>();
-	private int proximoId = 1;
-
 	public MaterialController() {
-		proximoId = 1;
+		Dados.proximoIdMaterial = 1;
 	}
 
 	@GetMapping("/api/materiais")
 	public ArrayList<Material> listar() {
-		return materiais;
+		return Dados.listaMateriais;
 	}
 
 	@PostMapping("/api/materiais")
 	public Material cadastrar(@RequestBody Material material) {
-		material.setId(proximoId);
-		proximoId = proximoId + 1;
-		materiais.add(material);
-		System.out.println(materiais);
+		material.setId(Dados.proximoIdMaterial);
+		Dados.proximoIdMaterial = Dados.proximoIdMaterial + 1;
+		Dados.listaMateriais.add(material);
+		System.out.println(Dados.listaMateriais);
 		return material;
 	}
 
 	@DeleteMapping("/api/materiais/{id}")
 	public void excluir(@PathVariable int id) {
-		for (int i = 0; i < materiais.size(); i++) {
-			if (materiais.get(i).getId() == id) {
-				materiais.remove(i);
+		for (int i = 0; i < Dados.listaMateriais.size(); i++) {
+			if (Dados.listaMateriais.get(i).getId() == id) {
+				Dados.listaMateriais.remove(i);
 				return;
 			}
 		}
@@ -48,11 +46,11 @@ public class MaterialController {
 
 	@PutMapping("/api/materiais/{id}")
 	public Material atualizar(@PathVariable int id, @RequestBody Material dados) {
-		for(int i = 0; i < materiais.size(); i++) {
-			if(materiais.get(i).getId() == id) {
-				materiais.get(i).setNome(dados.getNome());
-				materiais.get(i).setQuantidade(dados.getQuantidade());
-				return materiais.get(i);
+		for(int i = 0; i < Dados.listaMateriais.size(); i++) {
+			if(Dados.listaMateriais.get(i).getId() == id) {
+				Dados.listaMateriais.get(i).setNome(dados.getNome());
+				Dados.listaMateriais.get(i).setQuantidade(dados.getQuantidade());
+				return Dados.listaMateriais.get(i);
 			}
 		}
 		return null;

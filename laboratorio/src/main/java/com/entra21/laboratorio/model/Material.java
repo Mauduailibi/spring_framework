@@ -5,6 +5,7 @@ public class Material {
 	private int id;
 	private String nome;
 	private int quantidade;
+	private int categoriaId;
 
 	public Material() {
 	}
@@ -31,6 +32,14 @@ public class Material {
 
 	public void setQuantidade(int quantidade) {
 		this.quantidade = quantidade;
+	}
+
+	public int getCategoriaId() {
+		return this.categoriaId;
+	}
+
+	public void setCategoriaId(int categoriaId){
+		this.categoriaId = categoriaId;
 	}
 
 }
