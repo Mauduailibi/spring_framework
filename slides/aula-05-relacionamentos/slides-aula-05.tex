@@ -1,0 +1,1614 @@
+% =============================================================================
+% Aula 05 — Relacionamentos 1:N e N:N · Item de venda no StockSales
+% Beamer + tema Madrid | Curso Entra21 — Spring Framework
+% Compilar: tectonic -X compile slides-aula-05.tex
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codeblue}{RGB}{30,70,160}
+\definecolor{codered}{RGB}{180,50,50}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codered},
+  tabsize=2,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+           {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+           {ê}{{\^e}}1 {Ê}{{\^E}}1 {â}{{\^a}}1 {Â}{{\^A}}1
+           {à}{{\`a}}1 {À}{{\`A}}1
+}
+
+\newcommand{\onde}[1]{%
+  \begin{block}{Onde estamos}
+    #1
+  \end{block}
+}
+
+\title{Aula 05 --- Spring Framework}
+\subtitle{Relacionamentos · 1{:}N · N{:}N · Itens da venda}
+\author{Mauricio Duailibi Neto}
+\institute{Turma Java Entra21}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Como será a aula de hoje}
+  \begin{block}{Parte 1 --- 18h30 às 20h}
+    \begin{itemize}
+      \item Revisão da Aula 04
+      \item Relacionamento: um cadastro aponta para outro
+      \item 1{:}N com categoria e material
+      \item N{:}N: a ideia da lista do meio
+      \item Projeto \textbf{laboratorio} --- fazemos juntos
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.4em}
+  \begin{block}{Parte 2 --- 20h20 às 22h}
+    \begin{itemize}
+      \item Voltamos ao \textbf{StockSales}
+      \item Venda com \textbf{vários} produtos
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Dois projetos nesta aula}
+  Não vamos misturar os códigos.
+
+  \vspace{0.6em}
+  \begin{description}
+    \item[laboratorio] Primeira parte da aula.
+      Aqui aprendemos a ligar categoria e material.
+    \item[StockSales] O sistema da loja, que já existe.
+      Só depois do intervalo.
+  \end{description}
+
+  \vspace{0.6em}
+  Quando aparecer um código, o slide vai dizer:\\
+  \textbf{qual projeto} e \textbf{qual arquivo} estamos mexendo.
+\end{frame}
+
+\begin{frame}{Mapa da aula}
+  \tableofcontents
+\end{frame}
+
+% #############################################################################
+\section{Revisão da Aula 04}
+
+\begin{frame}{O que já sabemos}
+  \begin{itemize}
+    \item GET lista. GET com id devolve um só
+    \item POST cria. PUT altera. DELETE apaga
+    \item PUT \textbf{não} gera id novo e \textbf{não} dá \texttt{add}
+    \item Retirar / vender é uma ação com regra
+    \item Se a regra falhar, o servidor recusa e o JS usa \texttt{catch}
+  \end{itemize}
+
+  \vspace{0.6em}
+  No StockSales, as listas ficam em \texttt{Dados}.\\
+  A venda de \textbf{um} produto já baixa o estoque.
+\end{frame}
+
+\begin{frame}{Os quatro verbos}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Ação & Verbo HTTP & O que faz \\
+    \midrule
+    Listar / ler & GET & Lê, não muda nada \\
+    Cadastrar & POST & Cria um item novo \\
+    Editar & PUT & Troca os dados de um item \\
+    Excluir & DELETE & Apaga um item \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  Hoje esses verbos continuam iguais.\\
+  O que muda é o \textbf{conteúdo} do cadastro:\\
+  um objeto passa a guardar o id de outro.
+\end{frame}
+
+\begin{frame}{O que a venda da aula passada já fazia}
+  O JSON da venda era assim:
+
+  \vspace{0.4em}
+  \texttt{\{"clienteId": 1, "produtoId": 2, "quantidade": 3\}}
+
+  \vspace{0.6em}
+  \texttt{clienteId} e \texttt{produtoId} já são uma ligação.\\
+  A venda não copia o nome do cliente.\\
+  Ela guarda o \textbf{número} que aponta para ele.
+
+  \vspace{0.5em}
+  Hoje vamos dar nome a isso e usar em mais lugares.
+\end{frame}
+
+\begin{frame}{O que ainda falta}
+  No laboratorio, o material tem id, nome e quantidade.\\
+  Ele não diz de que grupo é.
+
+  \vspace{0.5em}
+  No StockSales, a venda só aceita \textbf{um} produto.\\
+  Na loja de verdade, a pessoa leva vários de uma vez.
+
+  \vspace{0.6em}
+  \begin{block}{Pergunta de hoje}
+    Como um cadastro aponta para outro\\
+    sem copiar todos os dados?
+  \end{block}
+\end{frame}
+
+% #############################################################################
+\section{Relacionamentos}
+
+\begin{frame}{Cadastros que se falam}
+  Até agora cada lista vivia sozinha:\\
+  materiais de um lado, produtos de outro.
+
+  \vspace{0.5em}
+  No mundo real eles se encaixam:
+  \begin{itemize}
+    \item O material \textbf{pertence} a uma categoria
+    \item A venda \textbf{pertence} a um cliente
+    \item A venda \textbf{tem} vários produtos
+  \end{itemize}
+
+  \vspace{0.5em}
+  Essa ligação chama \textbf{relacionamento}.
+\end{frame}
+
+\begin{frame}{Uma analogia que todo mundo já viu}
+  Uma turma tem vários alunos.\\
+  Um aluno está em \textbf{uma} turma.
+
+  \vspace{0.5em}
+  Não copiamos a lista de alunos dentro da turma\\
+  toda vez que alguém pergunta o nome da turma.
+
+  \vspace{0.5em}
+  Guardamos no aluno o número da turma:\\
+  \texttt{turmaId = 2}.
+
+  \vspace{0.5em}
+  Quando precisamos do nome, procuramos a turma 2\\
+  na lista de turmas.
+\end{frame}
+
+\begin{frame}{Dois jeitos de ligar}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Nome & Significado \\
+    \midrule
+    1:N & Um de um lado, vários do outro \\
+    N:N & Vários dos dois lados \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  1:N --- uma categoria, vários materiais.\\
+  Cada material tem \textbf{uma} categoria.
+
+  \vspace{0.5em}
+  N:N --- um material tem várias etiquetas,\\
+  e a mesma etiqueta serve para vários materiais.
+\end{frame}
+
+\begin{frame}{1{:}N --- o desenho}
+  Uma categoria aponta para vários materiais.\\
+  O material aponta para \textbf{uma} categoria.
+
+  \vspace{0.6em}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.6cm, minimum height=0.85cm,
+                  font=\small},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (cat) {Papelaria};
+    \node[box, fill=green!20, right=2.2cm of cat] (c1) {Caneta};
+    \node[box, fill=green!20, below=0.35cm of c1] (c2) {Caderno};
+    \node[box, fill=green!20, below=0.35cm of c2] (c3) {Grampeador};
+
+    \draw[seta] (cat.east) -- ++(0.5,0) |- (c1.west);
+    \draw[seta] (cat.east) -- ++(0.5,0) |- (c2.west);
+    \draw[seta] (cat.east) -- ++(0.5,0) |- (c3.west);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3em}
+  Papelaria é o ``1''.\\
+  Caneta, Caderno e Grampeador são o ``N''.
+\end{frame}
+
+\begin{frame}{Como gravamos o 1{:}N}
+  Não colocamos uma lista de materiais dentro da categoria.
+
+  \vspace{0.5em}
+  Colocamos no material o id da categoria:
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Material & quantidade & categoriaId \\
+    \midrule
+    Caneta & 10 & 1 \\
+    Caderno & 5 & 1 \\
+    Mouse & 3 & 2 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  A categoria 1 é Papelaria.\\
+  A categoria 2 é Informática.
+
+  \vspace{0.4em}
+  É o mesmo jeito do \texttt{clienteId} na venda.
+\end{frame}
+
+\begin{frame}[fragile]{O JSON do material com categoria}
+  O cadastro passa a levar mais um número:
+
+  \vspace{0.4em}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{"nome": "Caneta", "quantidade": 10, "categoriaId": 1}
+\end{lstlisting}
+
+  \vspace{0.5em}
+  O servidor não precisa do texto ``Papelaria'' nesse JSON.\\
+  O id 1 já aponta para ela.
+
+  \vspace{0.5em}
+  Se a pessoa mudar o nome da categoria depois,\\
+  a Caneta continua ligada ao id 1.\\
+  O nome novo aparece sozinho.
+\end{frame}
+
+\begin{frame}{N{:}N --- por que um id só não basta}
+  Um material pode ser Frágil \textbf{e} Uso interno.\\
+  A etiqueta Uso interno serve para Caneta \textbf{e} Caderno.
+
+  \vspace{0.5em}
+  Se o material tiver um único \texttt{etiquetaId},\\
+  ele só cabe em uma etiqueta.
+
+  \vspace{0.5em}
+  Se a etiqueta tiver um único \texttt{materialId},\\
+  ela só cabe em um material.
+
+  \vspace{0.5em}
+  Os dois lados são ``vários''.\\
+  Um campo só não resolve.
+\end{frame}
+
+\begin{frame}{N{:}N --- a lista do meio}
+  Criamos uma terceira lista.\\
+  Cada linha é um par: este material + esta etiqueta.
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    materialId & etiquetaId \\
+    \midrule
+    1 (Caneta) & 1 (Fragil) \\
+    1 (Caneta) & 2 (Uso interno) \\
+    2 (Caderno) & 2 (Uso interno) \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  Caneta aparece duas vezes: tem duas etiquetas.\\
+  Uso interno aparece duas vezes: serve para dois materiais.
+\end{frame}
+
+\begin{frame}{N{:}N --- o desenho}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.4cm, minimum height=0.8cm,
+                  font=\small},
+      meio/.style={draw, rounded corners, align=center,
+                   minimum width=1.6cm, minimum height=0.55cm,
+                   font=\scriptsize},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=green!20] (m1) {Caneta};
+    \node[box, fill=green!20, below=0.7cm of m1] (m2) {Caderno};
+
+    \node[meio, fill=yellow!25, right=1.5cm of m1] (l1) {1 -- 1};
+    \node[meio, fill=yellow!25, below=0.15cm of l1] (l2) {1 -- 2};
+    \node[meio, fill=yellow!25, below=0.15cm of l2] (l3) {2 -- 2};
+
+    \node[box, fill=blue!15, right=1.5cm of l1] (e1) {Fragil};
+    \node[box, fill=blue!15, below=0.7cm of e1] (e2) {Uso interno};
+
+    \draw[seta] (m1) -- (l1);
+    \draw[seta] (m1) -- (l2);
+    \draw[seta] (m2) -- (l3);
+    \draw[seta] (l1) -- (e1);
+    \draw[seta] (l2) -- (e2);
+    \draw[seta] (l3) -- (e2);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3em}
+  O amarelo é a lista do meio.\\
+  Sem ela, os dois lados não se encontram.
+\end{frame}
+
+\begin{frame}{Isso já aparece na loja}
+  Uma venda tem vários produtos.\\
+  Um produto aparece em várias vendas.
+
+  \vspace{0.5em}
+  Isso é N:N.\\
+  A lista do meio é o \textbf{item da venda}:\\
+  qual produto, quantas unidades, qual subtotal.
+
+  \vspace{0.6em}
+  Na primeira parte treinamos a ideia no laboratorio.\\
+  Depois do intervalo, a loja passa a aceitar\\
+  mais de um produto na mesma venda.
+\end{frame}
+
+\begin{frame}{O que não vamos usar hoje}
+  \begin{itemize}
+    \item Banco de dados
+    \item Anotações do tipo \texttt{@OneToMany}
+    \item JPA
+  \end{itemize}
+
+  \vspace{0.5em}
+  Continuamos com lista na memória e um \texttt{int}\\
+  guardando o id do outro cadastro.
+
+  \vspace{0.5em}
+  O raciocínio é o mesmo que o banco vai usar depois.\\
+  Só a ferramenta muda.
+\end{frame}
+
+% #############################################################################
+\section{Projeto laboratorio}
+
+\begin{frame}{O projeto laboratorio}
+  Continuamos no projeto \textbf{laboratorio}.\\
+  Não geramos outro no \texttt{start.spring.io}.
+
+  \vspace{0.5em}
+  \begin{block}{O que já deve estar pronto}
+    Material com GET, POST, PUT e DELETE.\\
+    GET por id. Retirar quantidade. Formulário na tela.
+  \end{block}
+
+  \vspace{0.5em}
+  Hoje entra um cadastro novo: \textbf{categoria}.\\
+  O material ganha um \texttt{categoriaId}.
+\end{frame}
+
+\begin{frame}{Passo 1 --- Subir o Spring}
+  \onde{Projeto \textbf{laboratorio}}
+
+  No terminal, dentro da pasta \texttt{laboratorio}:
+
+  \vspace{0.4em}
+  \texttt{./mvnw spring-boot:run}\\
+  {\small No Windows: \texttt{.\textbackslash mvnw.cmd spring-boot:run}}
+
+  \vspace{0.5em}
+  Abram no navegador: \texttt{http://localhost:8080}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Um Spring por vez}
+    Se o StockSales ainda estiver na porta 8080,
+    parem o outro antes.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Quais arquivos já existem}
+  Projeto: \textbf{laboratorio}
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Arquivo & Para quê \\
+    \midrule
+    \texttt{Material.java} & Os dados de um material \\
+    \texttt{MaterialController.java} & GET, POST, PUT, DELETE \\
+    \texttt{static/index.html} & A página \\
+    \texttt{static/js/app.js} & O JavaScript da página \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  Vamos \textbf{acrescentar} categoria e a classe \texttt{Dados}.
+\end{frame}
+
+\begin{frame}[fragile]{Onde cada arquivo fica}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+laboratorio/
+  src/main/java/com/entra21/laboratorio/
+    LaboratorioApplication.java
+    Dados.java                  (novo)
+    model/Material.java
+    model/Categoria.java        (novo)
+    controller/MaterialController.java
+    controller/CategoriaController.java  (novo)
+  src/main/resources/static/
+    index.html
+    js/app.js
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Por que a classe Dados}
+  Vamos ter dois Controllers: material e categoria.
+
+  \vspace{0.5em}
+  Se cada um guardar a própria lista, um \textbf{não vê}\\
+  o cadastro do outro.
+
+  \vspace{0.5em}
+  Vocês já fizeram isso no StockSales.\\
+  No laboratorio é a mesma ideia: uma classe só,\\
+  com as listas \texttt{static}.
+
+  \vspace{0.5em}
+  \texttt{static} = uma lista só, visível para qualquer\\
+  classe do projeto.
+\end{frame}
+
+\begin{frame}[fragile]{Classe Dados}
+  \onde{Projeto \textbf{laboratorio}\\
+        Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/laboratorio/Dados.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+package com.entra21.laboratorio;
+
+import java.util.ArrayList;
+import com.entra21.laboratorio.model.Material;
+import com.entra21.laboratorio.model.Categoria;
+
+public class Dados {
+  public static ArrayList<Material> materiais = new ArrayList<>();
+  public static int proximoIdMaterial = 1;
+  public static ArrayList<Categoria> categorias = new ArrayList<>();
+  public static int proximoIdCategoria = 1;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Mover a lista de materiais}
+  \onde{\texttt{MaterialController.java}}
+
+  Tirem os campos \texttt{materiais} e \texttt{proximoId}\\
+  de dentro da classe.
+
+  \vspace{0.4em}
+  Em todos os métodos, troquem:
+  \begin{itemize}
+    \item \texttt{materiais} $\rightarrow$ \texttt{Dados.materiais}
+    \item \texttt{proximoId} $\rightarrow$ \texttt{Dados.proximoIdMaterial}
+  \end{itemize}
+
+  \vspace{0.4em}
+  O import:
+  \texttt{com.entra21.laboratorio.Dados}
+
+  \vspace{0.4em}
+  Confiram GET, POST, PUT e DELETE no navegador\\
+  \textbf{antes} de seguir. A lista precisa continuar funcionando.
+\end{frame}
+
+% #############################################################################
+\section{Categoria (1{:}N)}
+
+\begin{frame}[fragile]{Classe Categoria}
+  \onde{Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/laboratorio/model/Categoria.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Categoria {
+  private int id;
+  private String nome;
+
+  public Categoria() {
+  }
+
+  public Categoria(int id, String nome) {
+    this.id = id;
+    this.nome = nome;
+  }
+}
+\end{lstlisting}
+
+  Completem os gets e sets de \texttt{id} e \texttt{nome}.
+\end{frame}
+
+\begin{frame}[fragile]{categoriaId no Material}
+  \onde{\texttt{model/Material.java}}
+
+  Acrescentem o campo e os get/set.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+private int categoriaId;
+
+public int getCategoriaId() {
+  return categoriaId;
+}
+
+public void setCategoriaId(int categoriaId) {
+  this.categoriaId = categoriaId;
+}
+\end{lstlisting}
+
+  O material agora aponta para uma categoria.
+\end{frame}
+
+\begin{frame}[fragile]{Construtor cheio do Material}
+  \onde{Ainda em \texttt{Material.java}}
+
+  Se ainda não tiverem, acrescentem este construtor.\\
+  Mantenham o vazio. O vazio continua obrigatório no POST.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public Material(int id, String nome,
+                int quantidade, int categoriaId) {
+  this.id = id;
+  this.nome = nome;
+  this.quantidade = quantidade;
+  this.categoriaId = categoriaId;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,shrink=5]{CategoriaController --- seed e GET}
+  \onde{\texttt{controller/CategoriaController.java}, arquivo novo}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@RestController
+public class CategoriaController {
+
+  public CategoriaController() {
+    if (Dados.categorias.isEmpty()) {
+      Dados.categorias.add(new Categoria(1, "Papelaria"));
+      Dados.categorias.add(new Categoria(2, "Informatica"));
+      Dados.categorias.add(new Categoria(3, "Limpeza"));
+      Dados.proximoIdCategoria = 4;
+    }
+  }
+
+  @GetMapping("/api/categorias")
+  public ArrayList<Categoria> listar() {
+    return Dados.categorias;
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{POST de categoria}
+  \onde{Ainda em \texttt{CategoriaController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PostMapping("/api/categorias")
+public Categoria cadastrar(@RequestBody Categoria categoria) {
+  categoria.setId(Dados.proximoIdCategoria);
+  Dados.proximoIdCategoria = Dados.proximoIdCategoria + 1;
+  Dados.categorias.add(categoria);
+  return categoria;
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Testem no navegador:\\
+  \texttt{http://localhost:8080/api/categorias}
+
+  \vspace{0.3em}
+  Devem aparecer Papelaria, Informatica e Limpeza.
+\end{frame}
+
+\begin{frame}[fragile]{PUT de material também grava a categoria}
+  \onde{\texttt{MaterialController.java}, método \texttt{atualizar}}
+
+  Junto de \texttt{setNome} e \texttt{setQuantidade}:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+Dados.materiais.get(i).setNome(dados.getNome());
+Dados.materiais.get(i).setQuantidade(dados.getQuantidade());
+Dados.materiais.get(i).setCategoriaId(dados.getCategoriaId());
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Sem essa linha, o Editar apaga a categoria\\
+  e deixa \texttt{categoriaId} em 0.
+\end{frame}
+
+\begin{frame}{O POST de material já lê o campo novo}
+  Não precisamos de método extra.
+
+  \vspace{0.5em}
+  O JSON agora traz \texttt{categoriaId}.\\
+  O Spring preenche o campo no objeto.\\
+  O \texttt{add} na lista já guarda tudo.
+
+  \vspace{0.5em}
+  Só o JavaScript precisa passar a \textbf{enviar} esse número.
+\end{frame}
+
+\begin{frame}{Conferindo o backend}
+  \begin{itemize}
+    \item [ ] \texttt{/api/categorias} lista as três categorias
+    \item [ ] \texttt{/api/materiais} continua listando
+    \item [ ] Um POST de material com \texttt{categoriaId} no JSON
+          devolve o campo preenchido
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se \texttt{/api/categorias} der 404, o Controller novo\\
+  não compilou ou o Spring não reiniciou.
+\end{frame}
+
+% #############################################################################
+\section{Tela com select}
+
+\begin{frame}{A pessoa não precisa decorar o id}
+  Digitar \texttt{categoriaId = 2} na mão é fácil de errar.
+
+  \vspace{0.5em}
+  Na aula passada, a venda já usava um \texttt{<select>}:\\
+  a pessoa escolhe o \textbf{nome}, o JS manda o \textbf{id}.
+
+  \vspace{0.5em}
+  Vamos fazer o mesmo para a categoria do material.
+\end{frame}
+
+\begin{frame}[fragile]{O select no HTML}
+  \onde{Projeto \textbf{laboratorio}\\
+        \texttt{static/index.html}, dentro do form}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+<label>Categoria</label>
+<select id="categoriaId"></select>
+\end{lstlisting}
+
+  \vspace{0.5em}
+  Fica junto dos inputs de nome e quantidade.\\
+  O JS vai encher as opções depois do GET.
+\end{frame}
+
+\begin{frame}[fragile]{Uma lista de categorias no JS}
+  \onde{\texttt{static/js/app.js}, no topo do arquivo}
+
+  Vamos guardar a resposta do GET.\\
+  A lista da tela usa essa variável para achar o nome.
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var categorias = [];
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Preencher o select}
+  \onde{\texttt{static/js/app.js}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+function carregarCategorias() {
+  axios.get("/api/categorias").then(function (resposta) {
+    categorias = resposta.data;
+    var select = document.getElementById("categoriaId");
+    select.innerHTML = "";
+    for (var i = 0; i < categorias.length; i++) {
+      var opcao = document.createElement("option");
+      opcao.value = categorias[i].id;
+      opcao.textContent = categorias[i].nome;
+      select.appendChild(opcao);
+    }
+  });
+}
+\end{lstlisting}
+
+  \texttt{value} é o id. O texto visível é o nome.
+\end{frame}
+
+\begin{frame}{Por que \texttt{value} é o id}
+  O que a pessoa vê: Papelaria.
+
+  \vspace{0.5em}
+  O que o servidor precisa: \texttt{1}.
+
+  \vspace{0.5em}
+  O \texttt{<option>} guarda os dois:\\
+  \texttt{value="1"} e o texto Papelaria.
+
+  \vspace{0.5em}
+  \texttt{select.value} devolve \texttt{"1"} --- ainda é texto.\\
+  Por isso usamos \texttt{Number(...)} na hora de montar o JSON.
+\end{frame}
+
+\begin{frame}[fragile]{Achar o nome pelo id}
+  \onde{\texttt{static/js/app.js}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+function nomeDaCategoria(categoriaId) {
+  for (var i = 0; i < categorias.length; i++) {
+    if (categorias[i].id === categoriaId) {
+      return categorias[i].nome;
+    }
+  }
+  return "";
+}
+\end{lstlisting}
+
+  Percorre a lista. Quando o id bate, devolve o nome.\\
+  Se não achar, devolve texto vazio.
+\end{frame}
+
+\begin{frame}[fragile]{Mostrar o nome na lista}
+  \onde{\texttt{static/js/app.js}, no \texttt{for} de
+        \texttt{carregarMateriais}}
+
+  Troquem o \texttt{textContent} do \texttt{li} por:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+li.textContent = material.nome
+  + " - quantidade: " + material.quantidade
+  + " - " + nomeDaCategoria(material.categoriaId)
+  + " ";
+\end{lstlisting}
+
+  A pessoa lê ``Caneta - quantidade: 10 - Papelaria''.\\
+  Não lê o número 1.
+\end{frame}
+
+\begin{frame}[fragile]{O submit manda o categoriaId}
+  \onde{\texttt{static/js/app.js}, no objeto \texttt{dados}\\
+        do submit --- no POST e no PUT}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var dados = {
+  nome: document.getElementById("nome").value,
+  quantidade: Number(
+    document.getElementById("quantidade").value),
+  categoriaId: Number(
+    document.getElementById("categoriaId").value)
+};
+\end{lstlisting}
+
+  Sem \texttt{Number}, o Java pode recusar o campo,\\
+  porque espera \texttt{int}.
+\end{frame}
+
+\begin{frame}[fragile]{Editar também preenche o select}
+  \onde{\texttt{static/js/app.js}, no clique de Editar}
+
+  Além de nome e quantidade:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+document.getElementById("categoriaId").value =
+  evento.target.getAttribute("data-categoria-id");
+\end{lstlisting}
+
+  \vspace{0.4em}
+  No botão Editar, acrescentem:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+btnEditar.setAttribute("data-categoria-id",
+  material.categoriaId);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Quando carregar a página}
+  \onde{No final de \texttt{app.js}}
+
+  As categorias precisam chegar \textbf{antes} da lista,\\
+  senão \texttt{nomeDaCategoria} não acha o nome.
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+carregarCategorias();
+carregarMateriais();
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Se o nome da categoria sair vazio na primeira carga,\\
+  chamem \texttt{carregarMateriais} \textbf{dentro} do
+  \texttt{then} de \texttt{carregarCategorias}.
+\end{frame}
+
+\begin{frame}{O caminho do cadastro com categoria}
+  \begin{enumerate}
+    \item A página pede GET \texttt{/api/categorias}
+    \item O select mostra Papelaria, Informatica, Limpeza
+    \item A pessoa escolhe Papelaria, digita Caneta, envia
+    \item O JS manda \texttt{categoriaId: 1} no POST
+    \item O material entra na lista com esse número
+    \item Na tela, o JS troca 1 por Papelaria
+  \end{enumerate}
+
+  \vspace{0.4em}
+  No Network: um GET de categorias e um POST de material.
+\end{frame}
+
+\begin{frame}{Conferindo o 1{:}N}
+  \begin{itemize}
+    \item [ ] O select mostra as três categorias
+    \item [ ] Cadastrar Caneta em Papelaria mostra o nome
+          na lista, não só o id
+    \item [ ] Editar troca a categoria e não duplica o material
+    \item [ ] Mouse em Informatica não aparece como Papelaria
+    \item [ ] No Network, o JSON do POST tem \texttt{categoriaId}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Erros que mais aparecem}
+  \begin{itemize}
+    \item Select vazio --- \texttt{carregarCategorias} não rodou
+    \item Nome da categoria em branco --- a lista de materiais
+          rodou antes do GET de categorias
+    \item \texttt{categoriaId} some no Editar --- faltou o
+          \texttt{setCategoriaId} no PUT
+    \item Lista de materiais some --- ainda está no Controller,
+          não em \texttt{Dados}
+    \item Porta 8080 ocupada
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Desafios}
+
+\begin{frame}{Agora é com vocês}
+  Continuem no projeto \textbf{laboratorio}.\\
+  Mesmos arquivos.
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Filtrar a lista por categoria
+    \item Não apagar categoria que ainda tem material
+    \item Etiquetas: o N:N
+  \end{enumerate}
+
+  \vspace{0.5em}
+  Salve $\rightarrow$ reinicie se precisar $\rightarrow$ teste no navegador.\\
+  F12, aba Network.
+\end{frame}
+
+\begin{frame}{Desafio 1 --- filtro por categoria}
+  \onde{\texttt{index.html} e \texttt{static/js/app.js}}
+
+  Coloquem um segundo select, por exemplo\\
+  \texttt{id="filtro-categoria"}.
+
+  \vspace{0.4em}
+  A primeira opção: \texttt{value=""} e texto ``Todas''.\\
+  As outras: as mesmas categorias.
+
+  \vspace{0.4em}
+  Em \texttt{carregarMateriais}, se o filtro tiver um id,\\
+  só mostrem o material cujo \texttt{categoriaId} é aquele.
+
+  \vspace{0.4em}
+  No \texttt{change} do select, chamem
+  \texttt{carregarMateriais} de novo.
+\end{frame}
+
+\begin{frame}[fragile]{Desafio 1 --- o if do filtro}
+  Ideia do \texttt{for} (vocês escrevem o resto):
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var filtro = document.getElementById(
+  "filtro-categoria").value;
+
+if (filtro !== "" &&
+    material.categoriaId !== Number(filtro)) {
+  continue;
+}
+\end{lstlisting}
+
+  \texttt{continue} pula para o próximo material\\
+  e não cria o \texttt{li}.
+\end{frame}
+
+\begin{frame}{Desafio 2 --- não apagar categoria em uso}
+  \onde{\texttt{CategoriaController.java} e \texttt{app.js}}
+
+  Antes de remover a categoria, percorram
+  \texttt{Dados.materiais}.
+
+  \vspace{0.4em}
+  Se algum material tiver aquele \texttt{categoriaId},\\
+  lancem \texttt{ResponseStatusException} com
+  \texttt{HttpStatus.BAD\_REQUEST}.
+
+  \vspace{0.4em}
+  No JS, o clique de excluir categoria usa \texttt{catch}\\
+  e escreve em \texttt{\#mensagem}:\\
+  ``Categoria em uso''.
+
+  \vspace{0.4em}
+  Testem apagar Papelaria com a Caneta ainda cadastrada:\\
+  tem que recusar.
+\end{frame}
+
+\begin{frame}{Desafio 3 --- etiquetas (N{:}N)}
+  \onde{Arquivos novos no laboratorio}
+
+  \begin{enumerate}
+    \item Classe \texttt{Etiqueta}: \texttt{id} e \texttt{nome}
+    \item Classe \texttt{MaterialEtiqueta}:
+          \texttt{materialId} e \texttt{etiquetaId}
+    \item Listas dessas duas classes em \texttt{Dados}
+    \item GET e POST de \texttt{/api/etiquetas}
+    \item POST \texttt{/api/materiais/\{id\}/etiquetas/\{etiquetaId\}}
+          para vincular
+  \end{enumerate}
+
+  \vspace{0.4em}
+  Seed sugerido: Fragil e Uso interno.
+\end{frame}
+
+\begin{frame}[fragile]{Desafio 3 --- o POST de vincular}
+  O método não cria material nem etiqueta.\\
+  Só acrescenta uma linha na lista do meio.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/api/materiais/{id}/etiquetas/{etiquetaId}")
+public MaterialEtiqueta vincular(@PathVariable int id,
+    @PathVariable int etiquetaId) {
+  MaterialEtiqueta ligacao = new MaterialEtiqueta();
+  ligacao.setMaterialId(id);
+  ligacao.setEtiquetaId(etiquetaId);
+  Dados.ligacoes.add(ligacao);
+  return ligacao;
+}
+\end{lstlisting}
+
+  Construtor vazio + gets e sets na classe
+  \texttt{MaterialEtiqueta}.
+\end{frame}
+
+\begin{frame}{Desafio 3 --- mostrar na lista}
+  No JS, peçam GET das ligações (um GET
+  \texttt{/api/ligacoes} ajuda).
+
+  \vspace{0.4em}
+  Para cada material, percorram as ligações.\\
+  Quando o \texttt{materialId} bater, achem o nome da etiqueta\\
+  e colem no texto do \texttt{li}.
+
+  \vspace{0.4em}
+  Um material pode mostrar duas etiquetas.\\
+  A mesma etiqueta pode aparecer em dois materiais.
+
+  \vspace{0.4em}
+  Extra: botão para desvincular, apagando aquela linha\\
+  da lista do meio --- sem apagar o material.
+\end{frame}
+
+\begin{frame}{Extra}
+  Se terminarem os três, ainda no \textbf{laboratorio}:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Não vincular a mesma etiqueta duas vezes
+          no mesmo material
+    \item Recusar vincular se o material ou a etiqueta
+          não existir
+    \item Página simples só para cadastrar categoria
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Checklist}
+  \begin{itemize}
+    \item [ ] Estou no projeto \texttt{laboratorio}?
+    \item [ ] As listas estão em \texttt{Dados}?
+    \item [ ] \texttt{/api/categorias} devolve as três?
+    \item [ ] O material tem \texttt{categoriaId}?
+    \item [ ] A lista mostra o \textbf{nome} da categoria?
+    \item [ ] O PUT não zera a categoria?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Intervalo}
+  \begin{center}
+    \Large Retomamos às \textbf{20h20}\\[0.8em]
+    \normalsize
+    Fechem o \texttt{laboratorio}.\\
+    Parem o Spring.\\
+    Na segunda parte abrimos o \textbf{StockSales}.
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{Parte 2 --- StockSales}
+
+\begin{frame}{Mudamos de projeto}
+  \onde{Agora é o projeto \textbf{StockSales}.\\
+        O laboratorio já está encerrado.}
+
+  Parem o Spring do laboratorio.\\
+  Abram a pasta do StockSales e subam de novo.
+\end{frame}
+
+\begin{frame}{Onde o StockSales parou}
+  Na aula passada vocês chegaram em:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Listas em \texttt{Dados}
+    \item Produto com PUT
+    \item Cliente com GET e POST
+    \item Venda de \textbf{um} produto, com baixa de estoque
+  \end{itemize}
+
+  \vspace{0.5em}
+  A venda ainda tem \texttt{produtoId} e \texttt{quantidade}\\
+  nela mesma. Só cabe um produto.
+\end{frame}
+
+\begin{frame}{O que vamos fazer no StockSales}
+  Uma venda com \textbf{vários} produtos.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Quem compra: um cliente
+    \item O quê: uma lista de itens
+    \item Cada item: um produto + uma quantidade + um subtotal
+    \item Total da venda = soma dos subtotais
+  \end{itemize}
+
+  \vspace{0.5em}
+  É o N:N da primeira parte, com os nomes da loja.\\
+  A lista do meio se chama \texttt{ItemVenda}.
+\end{frame}
+
+\begin{frame}{O desenho da venda}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.3cm, minimum height=0.85cm,
+                  font=\small},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (cli) {Cliente};
+    \node[box, fill=yellow!25, right=1.6cm of cli] (ven) {Venda};
+    \node[box, fill=orange!25, right=1.6cm of ven] (item) {ItemVenda};
+    \node[box, fill=green!20, right=1.6cm of item] (pro) {Produto};
+
+    \draw[seta] (cli) -- node[above, font=\scriptsize]{1{:}N} (ven);
+    \draw[seta] (ven) -- node[above, font=\scriptsize]{1{:}N} (item);
+    \draw[seta] (pro) -- node[above, font=\scriptsize]{1{:}N} (item);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.6em}
+  Um cliente tem várias vendas.\\
+  Uma venda tem vários itens.\\
+  Um produto aparece em vários itens.
+
+  \vspace{0.4em}
+  Venda $\leftrightarrow$ Produto é N:N.\\
+  \texttt{ItemVenda} é a ficha do meio.
+\end{frame}
+
+\begin{frame}{O que sai da Venda e o que entra}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Antes (aula 04) & Agora \\
+    \midrule
+    \texttt{produtoId} na Venda & vai para o item \\
+    \texttt{quantidade} na Venda & vai para o item \\
+    um produto só & lista \texttt{itens} \\
+    \texttt{total} & continua na Venda \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  \texttt{clienteId} permanece na Venda:\\
+  a venda inteira é de um cliente só.
+\end{frame}
+
+\begin{frame}[fragile]{Classe ItemVenda}
+  \onde{Projeto \textbf{StockSales}\\
+        Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/stocksales/model/ItemVenda.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class ItemVenda {
+  private int produtoId;
+  private int quantidade;
+  private double subtotal;
+
+  public ItemVenda() {
+  }
+}
+\end{lstlisting}
+
+  Gets e sets dos três atributos.\\
+  O subtotal o servidor calcula. O JS não manda.
+\end{frame}
+
+\begin{frame}[fragile]{Venda.java --- a lista de itens}
+  \onde{\texttt{model/Venda.java}}
+
+  Tirem \texttt{produtoId} e \texttt{quantidade}.\\
+  Acrescentem:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+private ArrayList<ItemVenda> itens = new ArrayList<>();
+
+public ArrayList<ItemVenda> getItens() {
+  return itens;
+}
+
+public void setItens(ArrayList<ItemVenda> itens) {
+  this.itens = itens;
+}
+\end{lstlisting}
+
+  Import: \texttt{java.util.ArrayList}.\\
+  Construtor vazio continua.
+\end{frame}
+
+\begin{frame}[fragile]{O JSON que o JavaScript vai mandar}
+  Ana leva um Mouse e dois Teclados:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{
+  "clienteId": 1,
+  "itens": [
+    {"produtoId": 2, "quantidade": 1},
+    {"produtoId": 1, "quantidade": 2}
+  ]
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Sem \texttt{total}. Sem \texttt{subtotal}.\\
+  O servidor preenche depois, com o preço do produto.
+\end{frame}
+
+\begin{frame}{O que o POST faz, em dois for}
+  Se baixarmos o estoque do primeiro item e o segundo\\
+  falhar, a loja já perdeu estoque à toa.
+
+  \vspace{0.5em}
+  Por isso \textbf{dois} \texttt{for}:
+  \begin{enumerate}
+    \item Conferir cliente, produtos e estoque de
+          \textbf{todos} os itens. Se um falhar, recusa
+          e \textbf{não muda nada}
+    \item Só então: subtotal, total, baixa de estoque,
+          gravar a venda
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Achar um produto --- método auxiliar}
+  \onde{\texttt{VendaController.java}}
+
+  Vocês já repetiram esse \texttt{for} várias vezes.\\
+  Um método na mesma classe evita copiar de novo.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+private Produto acharProduto(int id) {
+  for (int i = 0; i < Dados.produtos.size(); i++) {
+    if (Dados.produtos.get(i).getId() == id) {
+      return Dados.produtos.get(i);
+    }
+  }
+  return null;
+}
+\end{lstlisting}
+
+  Façam o equivalente para cliente:\\
+  \texttt{acharCliente}.
+\end{frame}
+
+\begin{frame}[fragile]{POST --- cliente e lista vazia}
+  \onde{\texttt{VendaController.java}, método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/api/vendas")
+public Venda cadastrar(@RequestBody Venda pedido) {
+  Cliente cliente = acharCliente(pedido.getClienteId());
+  if (cliente == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Cliente nao encontrado");
+  }
+  if (pedido.getItens() == null || pedido.getItens().isEmpty()) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Venda sem itens");
+  }
+\end{lstlisting}
+
+  O método ainda não acabou.
+\end{frame}
+
+\begin{frame}[fragile]{POST --- primeiro for, só confere}
+  \onde{Ainda no mesmo método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+  for (int i = 0; i < pedido.getItens().size(); i++) {
+    ItemVenda item = pedido.getItens().get(i);
+    Produto produto = acharProduto(item.getProdutoId());
+    if (produto == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Produto nao encontrado");
+    }
+    if (produto.getEstoque() < item.getQuantidade()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Estoque insuficiente");
+    }
+  }
+\end{lstlisting}
+
+  Nenhum \texttt{setEstoque} aqui.\\
+  Se lançar a exceção, o segundo \texttt{for} nem roda.
+\end{frame}
+
+\begin{frame}[fragile]{POST --- segundo for, grava de verdade}
+  \onde{Ainda no mesmo método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+  double total = 0;
+  for (int i = 0; i < pedido.getItens().size(); i++) {
+    ItemVenda item = pedido.getItens().get(i);
+    Produto produto = acharProduto(item.getProdutoId());
+    item.setSubtotal(produto.getPreco() * item.getQuantidade());
+    total = total + item.getSubtotal();
+    produto.setEstoque(
+        produto.getEstoque() - item.getQuantidade());
+  }
+  pedido.setId(Dados.proximoIdVenda);
+  Dados.proximoIdVenda = Dados.proximoIdVenda + 1;
+  pedido.setTotal(total);
+  Dados.vendas.add(pedido);
+  return pedido;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Olhando o segundo for com calma}
+  \begin{enumerate}
+    \item Pega o item da posição \texttt{i}
+    \item Acha o produto daquele \texttt{produtoId}
+    \item Subtotal = preço $\times$ quantidade daquele item
+    \item Soma no total da venda
+    \item Diminui o estoque daquele produto
+  \end{enumerate}
+
+  \vspace{0.5em}
+  O \texttt{for} anda item por item.\\
+  Mouse e Teclado baixam estoque os dois.
+
+  \vspace{0.5em}
+  O GET \texttt{/api/vendas} continua igual:\\
+  devolve \texttt{Dados.vendas}. O JSON agora traz
+  \texttt{itens}.
+\end{frame}
+
+\begin{frame}{A tela precisa de um carrinho}
+  Na aula passada: um select de produto e Confirmar.
+
+  \vspace{0.5em}
+  Agora a pessoa \textbf{acrescenta} produtos um a um\\
+  e só depois confirma.
+
+  \vspace{0.5em}
+  No JavaScript isso é uma lista:
+
+  \vspace{0.3em}
+  \texttt{var itens = [];}
+
+  \vspace{0.5em}
+  Cada clique em Adicionar faz \texttt{push} de um objeto\\
+  com \texttt{produtoId} e \texttt{quantidade}.\\
+  Confirmar manda essa lista no POST.
+\end{frame}
+
+\begin{frame}[fragile]{vendas-nova.html --- os botões}
+  \onde{\texttt{static/vendas-nova.html}}
+
+  Mantenham o select de cliente.\\
+  O de produto e a quantidade servem para \textbf{Adicionar},\\
+  não para confirmar direto.
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+<label>Produto</label>
+<select id="produtoId"></select>
+<label>Quantidade</label>
+<input id="quantidade" type="number">
+<button id="btn-adicionar" type="button">Adicionar</button>
+<ul id="lista-itens"></ul>
+<button id="btn-vender" type="button">Confirmar venda</button>
+<p id="mensagem"></p>
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{A lista itens no JS}
+  \onde{\texttt{static/js/vendas-nova.js}, no topo}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+var itens = [];
+\end{lstlisting}
+
+  \vspace{0.4em}
+  \texttt{carregarClientes} e \texttt{carregarProdutos}\\
+  continuam iguais à aula passada.
+\end{frame}
+
+\begin{frame}[fragile]{Mostrar o carrinho na página}
+  \onde{\texttt{vendas-nova.js}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+function mostrarItens() {
+  var lista = document.getElementById("lista-itens");
+  lista.innerHTML = "";
+  for (var i = 0; i < itens.length; i++) {
+    var li = document.createElement("li");
+    li.textContent = "Produto " + itens[i].produtoId
+      + " - qtd " + itens[i].quantidade;
+    lista.appendChild(li);
+  }
+}
+\end{lstlisting}
+
+  Extra depois: trocar o id pelo nome, percorrendo\\
+  os produtos que o GET já trouxe.
+\end{frame}
+
+\begin{frame}[fragile]{Botão Adicionar}
+  \onde{\texttt{vendas-nova.js}}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+document.getElementById("btn-adicionar")
+  .addEventListener("click", function () {
+    var item = {
+      produtoId: Number(
+        document.getElementById("produtoId").value),
+      quantidade: Number(
+        document.getElementById("quantidade").value)
+    };
+    itens.push(item);
+    document.getElementById("quantidade").value = "";
+    mostrarItens();
+  });
+\end{lstlisting}
+
+  \texttt{push} põe no fim da lista.\\
+  A venda ainda \textbf{não} foi para o servidor.
+\end{frame}
+
+\begin{frame}[fragile,shrink=5]{Confirmar a venda}
+  \onde{\texttt{vendas-nova.js}, no clique de Confirmar}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+var dados = {
+  clienteId: Number(document.getElementById("clienteId").value),
+  itens: itens
+};
+
+axios.post("/api/vendas", dados)
+  .then(function () {
+    document.getElementById("mensagem").textContent =
+      "Venda registrada";
+    itens = [];
+    mostrarItens();
+    carregarProdutos();
+  })
+  .catch(function () {
+    document.getElementById("mensagem").textContent =
+      "Nao foi possivel registrar a venda";
+  });
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Por que esvaziar \texttt{itens} depois do then}
+  A venda já foi gravada.
+
+  \vspace{0.5em}
+  Se não fizermos \texttt{itens = []}, o próximo Confirmar\\
+  manda os mesmos produtos de novo.
+
+  \vspace{0.5em}
+  \texttt{carregarProdutos} atualiza o estoque no select.\\
+  Sem isso, a tela ainda mostra a quantidade antiga.
+\end{frame}
+
+\begin{frame}[fragile]{Histórico --- percorrer os itens}
+  \onde{\texttt{static/js/vendas.js}}
+
+  A venda agora tem uma lista dentro.\\
+  Um \texttt{for} na venda e outro nos itens:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+for (var i = 0; i < vendas.length; i++) {
+  var texto = "Cliente " + vendas[i].clienteId
+    + " - total R$ " + vendas[i].total + " - ";
+  var itensVenda = vendas[i].itens;
+  for (var j = 0; j < itensVenda.length; j++) {
+    texto = texto + "prod " + itensVenda[j].produtoId
+      + " x" + itensVenda[j].quantidade + " ";
+  }
+  var li = document.createElement("li");
+  li.textContent = texto;
+  lista.appendChild(li);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{O caminho da venda com vários itens}
+  \begin{enumerate}
+    \item A pessoa escolhe Ana, Mouse, quantidade 1, Adicionar
+    \item Escolhe Teclado, quantidade 2, Adicionar
+    \item A \texttt{<ul>} mostra os dois
+    \item Confirmar manda o JSON com \texttt{itens}
+    \item O servidor confere os dois, depois baixa os dois estoques
+    \item O histórico lista a venda com total e os itens
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Conferindo no StockSales}
+  \begin{itemize}
+    \item [ ] Dá para adicionar dois produtos antes de confirmar
+    \item [ ] A venda grava os dois itens
+    \item [ ] O estoque dos dois produtos diminui
+    \item [ ] Pedir mais do que o estoque de \textbf{um} deles
+          recusa a venda \textbf{inteira}
+    \item [ ] O outro produto \textbf{não} perde estoque nessa recusa
+    \item [ ] Confirmar com carrinho vazio recusa
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Como conferir a recusa inteira}
+  Mouse com estoque 30. Headset com estoque 15.
+
+  \vspace{0.4em}
+  Adicionem Mouse quantidade 1 e Headset quantidade 20.\\
+  Confirmar.
+
+  \vspace{0.5em}
+  A mensagem de erro aparece.\\
+  Recarreguem produtos: Mouse continua 30.\\
+  Headset continua 15.
+
+  \vspace{0.5em}
+  Se o Mouse tiver baixado, o primeiro \texttt{for} de conferência\\
+  não está antes do \texttt{setEstoque}.
+\end{frame}
+
+\begin{frame}{Extra no StockSales}
+  Se der tempo:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item No carrinho e no histórico, mostrar o \textbf{nome}
+          do produto, não só o id
+    \item Botão Remover em cada item do carrinho, antes
+          de confirmar
+    \item Não permitir quantidade 0 ou negativa no Adicionar
+    \item Recusar dois itens com o mesmo \texttt{produtoId}
+          na mesma venda --- ou somar as quantidades
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O que não entra hoje}
+  \begin{itemize}
+    \item Cancelar venda e devolver estoque
+    \item Banco de dados
+    \item Login
+    \item Anotações JPA
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{block}{Meta no StockSales}
+    Uma venda com vários itens.\\
+    Estoque de cada produto baixando.\\
+    Se um item falhar, a venda inteira recusa.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Critérios de aceite}
+  \begin{itemize}
+    \item [ ] Venda aceita dois produtos diferentes
+    \item [ ] \texttt{total} é a soma dos subtotais
+    \item [ ] Estoque de cada produto diminui a quantidade
+              daquele item
+    \item [ ] Estoque insuficiente em um item recusa tudo
+    \item [ ] Histórico lista os itens
+    \item [ ] Home ainda leva a produtos, clientes, nova venda
+              e histórico
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Recapitulando}
+
+\begin{frame}{O que vimos hoje}
+  \begin{enumerate}
+    \item Relacionamento é um cadastro apontando para outro
+    \item 1:N: o lado ``muitos'' guarda o id do lado ``um''
+    \item N:N: uma terceira lista guarda os dois ids
+    \item O \texttt{select} mostra o nome e manda o id
+    \item No StockSales, \texttt{ItemVenda} é essa lista do meio
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Os dois desenhos, lado a lado}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    laboratorio & StockSales \\
+    \midrule
+    Categoria 1:N Material & Cliente 1:N Venda \\
+    \texttt{categoriaId} no material & \texttt{clienteId} na venda \\
+    Etiqueta N:N Material & Produto N:N Venda \\
+    \texttt{MaterialEtiqueta} & \texttt{ItemVenda} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  Mesma ideia. Nomes diferentes.
+\end{frame}
+
+\begin{frame}{Na próxima aula}
+  \begin{block}{Aula 06}
+    \begin{itemize}
+      \item Validação dos dados que chegam
+      \item Erros HTTP com mensagem mais clara
+      \item Organizar o que já cresceu no StockSales
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.6em}
+  Tragam o StockSales com venda de vários itens funcionando.
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \Huge Obrigado!\\[1.2em]
+    \normalsize Mauricio Duailibi Neto\\
+    Turma Java Entra21
+  \end{center}
+\end{frame}
+
+\end{document}

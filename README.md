@@ -42,10 +42,12 @@ Depois abra no navegador: [http://localhost:8080](http://localhost:8080)
 Com LaTeX instalado (TeX Live / MiKTeX):
 
 ```bash
-cd slides/aula-04-put-vendas
-pdflatex slides-aula-04.tex
-pdflatex slides-aula-04.tex
+cd slides/aula-05-relacionamentos
+pdflatex slides-aula-05.tex
+pdflatex slides-aula-05.tex
 ```
+
+(Com Tectonic: `tectonic slides-aula-05.tex`.)
 
 ## Disciplinas anteriores
 
