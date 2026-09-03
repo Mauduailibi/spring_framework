@@ -7,12 +7,7 @@ public class Produto {
     private double preco;
     private int estoque;
 
-    public Produto(int id, String n, double p, int e) {
-        this.id = id;
-        this.nome = n;
-        this.preco = p;
-        this.estoque = e;
-    }
+    public Produto() {}
 
     public int getId() {
         return id;
