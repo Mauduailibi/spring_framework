@@ -5,6 +5,15 @@ var idEditando = "";
 var categorias = [];
 
 // criar função que recebe um id de categoria e retorna o nome da categoria
+function nomeCategoria(categoriaId) {
+    for(var i = 0; i < categorias.length; i++) {
+        if(categorias[i].id == categoriaId) {
+            return categorias[i].nome;
+        }
+    }
+
+    return "Categoria não encontrada";
+}
 
 function carregarCategorias() {
     axios.get("/api/categorias").then(function(resposta) {
@@ -33,7 +42,7 @@ function carregarMateriais() {
             var li = document.createElement("li");
             li.textContent = material.nome + 
                 " - quantidade: " + material.quantidade + 
-                " - categoria: " // chamar a funcao de pegar o nome da categoria passando -> material.categoriaId;
+                " - categoria: " + nomeCategoria(material.categoriaId);
         
             var botao = document.createElement("button");
             botao.textContent = "Excluir";
