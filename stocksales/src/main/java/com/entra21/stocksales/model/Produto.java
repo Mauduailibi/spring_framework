@@ -9,6 +9,13 @@ public class Produto {
 
     public Produto() {}
 
+    public Produto(int id, String nome, double preco, int estoque) {
+        this.id = id;
+        this.nome = nome;
+        this.preco = preco;
+        this.estoque = estoque;
+    }
+
     public int getId() {
         return id;
     }
@@ -40,7 +47,5 @@ public class Produto {
     public void setEstoque(int estoque) {
         this.estoque = estoque;
     }
-
-    
 
 }
