@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockSales - Histórico</title>
+
+    <link rel="stylesheet" href="css/estilo.css" />
+</head>
+<body class="pagina-historico">
+
+    <header class="topo">
+        <a class="marca" href="/">
+            <span class="marca-icone" aria-hidden="true">SS</span>
+            StockSales
+        </a>
+        <nav class="menu">
+            <a href="/">Início</a>
+            <a href="/produtos.html">Produtos</a>
+            <a href="/clientes.html">Clientes</a>
+            <a href="/vendas-nova.html">Nova venda</a>
+            <a href="/vendas.html" class="ativo">Histórico</a>
+            <a href="/vendas-varios.html">Vários produtos</a>
+        </nav>
+    </header>
+
+    <main class="conteudo">
+        <section class="cabecalho-pagina">
+            <h1>Histórico de vendas</h1>
+            <p class="subtitulo">
+                As vendas gravadas pelo servidor.
+            </p>
+        </section>
+
+        <p id="mensagem"></p>
+        <ul id="lista-vendas"></ul>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/vendas.js"></script>
+</body>
+</html>

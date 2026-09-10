@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca - Livros</title>
+
+    <link rel="stylesheet" href="css/estilo.css" />
+</head>
+<body class="pagina-livros">
+
+    <header class="topo">
+        <a class="marca" href="/">
+            <span class="marca-icone" aria-hidden="true">BB</span>
+            Biblioteca
+        </a>
+        <nav class="menu">
+            <a href="/">Início</a>
+            <a href="/livros.html" class="ativo">Livros</a>
+            <a href="/leitores.html">Leitores</a>
+            <a href="/emprestimos-novo.html">Novo empréstimo</a>
+            <a href="/emprestimos.html">Histórico</a>
+            <a href="/emprestimos-varios.html">Vários livros</a>
+        </nav>
+    </header>
+
+    <main class="conteudo">
+        <section class="cabecalho-pagina">
+            <h1>Lista de livros</h1>
+            <p class="subtitulo">
+                Cadastre um livro e veja a lista atualizar pela API.
+            </p>
+        </section>
+
+        <form id="form-livro">
+            <div class="campo">
+                <label for="nome">Nome</label>
+                <input id="nome" placeholder="Ex.: Dom Casmurro" autocomplete="off" />
+            </div>
+            <div class="campo">
+                <label for="autor">Autor</label>
+                <input id="autor" placeholder="Ex.: Machado de Assis" autocomplete="off" />
+            </div>
+            <div class="campo campo-curto">
+                <label for="quantidade">Quantidade</label>
+                <input id="quantidade" placeholder="0" type="number" min="0" step="1" />
+            </div>
+            <button id="btn-cadastro" type="submit">Cadastrar</button>
+        </form>
+
+        <ul id="lista-livros"></ul>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/livros.js"></script>
+</body>
+</html>

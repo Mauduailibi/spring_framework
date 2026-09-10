@@ -3,55 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockSales - Clientes</title>
+    <title>Biblioteca - Leitores</title>
 
     <link rel="stylesheet" href="css/estilo.css" />
 </head>
-<body class="pagina-clientes">
+<body class="pagina-leitores">
 
     <header class="topo">
         <a class="marca" href="/">
-            <span class="marca-icone" aria-hidden="true">SS</span>
-            StockSales
+            <span class="marca-icone" aria-hidden="true">BB</span>
+            Biblioteca
         </a>
         <nav class="menu">
             <a href="/">Início</a>
-            <a href="/produtos.html">Produtos</a>
-            <a href="/clientes.html" class="ativo">Clientes</a>
-            <a href="/vendas-nova.html">Nova venda</a>
-            <a href="/vendas.html">Histórico</a>
-            <a href="/vendas-varios.html">Vários produtos</a>
+            <a href="/livros.html">Livros</a>
+            <a href="/leitores.html" class="ativo">Leitores</a>
+            <a href="/emprestimos-novo.html">Novo empréstimo</a>
+            <a href="/emprestimos.html">Histórico</a>
+            <a href="/emprestimos-varios.html">Vários livros</a>
         </nav>
     </header>
 
     <main class="conteudo">
         <section class="cabecalho-pagina">
-            <h1>Lista de clientes</h1>
+            <h1>Lista de leitores</h1>
             <p class="subtitulo">
-                Cadastre um cliente e veja a lista atualizar pela API.
+                Cadastre um leitor e veja a lista atualizar pela API.
             </p>
         </section>
 
-        <form id="form-cliente">
+        <form id="form-leitor">
             <div class="campo">
                 <label for="nome">Nome</label>
-                <input id="nome" placeholder="Ex.: Ana Silva" autocomplete="off" />
+                <input id="nome" placeholder="Ex.: Maria Silva" autocomplete="off" />
             </div>
             <div class="campo">
                 <label for="email">E-mail</label>
-                <input id="email" placeholder="Ex.: ana@email.com" autocomplete="off" />
+                <input id="email" placeholder="Ex.: maria@email.com" autocomplete="off" />
             </div>
             <div class="campo campo-curto">
                 <label for="telefone">Telefone</label>
-                <input id="telefone" placeholder="Ex.: 1199" autocomplete="off" />
+                <input id="telefone" placeholder="Ex.: 1191" autocomplete="off" />
             </div>
             <button id="btn-cadastro" type="submit">Cadastrar</button>
         </form>
 
-        <ul id="lista-clientes"></ul>
+        <ul id="lista-leitores"></ul>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="js/clientes.js"></script>
+    <script src="js/leitores.js"></script>
 </body>
 </html>

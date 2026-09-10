@@ -1,0 +1,1113 @@
+% =============================================================================
+% Aula 06 — A classe do meio · Empréstimo na biblioteca · Venda no StockSales
+% Beamer + tema Madrid | Curso Entra21 — Spring Framework
+% Compilar: tectonic -X compile slides-aula-06.tex
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codeblue}{RGB}{30,70,160}
+\definecolor{codered}{RGB}{180,50,50}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codered},
+  tabsize=2,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+           {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+           {ê}{{\^e}}1 {Ê}{{\^E}}1 {â}{{\^a}}1 {Â}{{\^A}}1
+           {à}{{\`a}}1 {À}{{\`A}}1
+}
+
+\newcommand{\onde}[1]{%
+  \begin{block}{Onde estamos}
+    #1
+  \end{block}
+}
+
+\title{Aula 06 --- Spring Framework}
+\subtitle{A classe do meio · Empréstimo · Venda}
+\author{Mauricio Duailibi Neto}
+\institute{Turma Java Entra21}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Como será a aula de hoje}
+  \begin{block}{Parte 1 --- 18h30 às 20h}
+    \begin{itemize}
+      \item Revisão da Aula 05
+      \item Quando 1{:}N não chega
+      \item A classe do meio
+      \item Projeto \textbf{biblioteca} --- fazemos juntos
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.4em}
+  \begin{block}{Parte 2 --- 20h20 às 22h}
+    \begin{itemize}
+      \item Voltamos ao \textbf{StockSales}
+      \item Venda de um produto
+      \item Venda com vários produtos
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Dois projetos nesta aula}
+  Não vamos misturar os códigos.
+
+  \vspace{0.6em}
+  \begin{description}
+    \item[biblioteca] Primeira parte da aula.
+      Livro e leitor já existem. Nós criamos o empréstimo.
+    \item[StockSales] O sistema da loja.
+      Cliente e produto já existem. Só depois do intervalo.
+  \end{description}
+
+  \vspace{0.6em}
+  O JavaScript das telas já está pronto.\\
+  Hoje a gente escreve o Java.
+\end{frame}
+
+\begin{frame}{Mapa da aula}
+  \tableofcontents
+\end{frame}
+
+% #############################################################################
+\section{Revisão da Aula 05}
+
+\begin{frame}{O que já sabemos}
+  Na aula passada um cadastro passou a apontar para outro.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item laboratorio: o material guarda \texttt{categoriaId}
+    \item Uma categoria, vários materiais --- isso é 1{:}N
+    \item As listas ficam na classe \texttt{Dados}
+    \item StockSales: produto e cliente, cada um na sua lista
+  \end{itemize}
+
+  \vspace{0.5em}
+  Cliente e produto ainda não se encontram.\\
+  Ainda não existe venda.
+\end{frame}
+
+\begin{frame}{Como gravamos o 1{:}N}
+  Não copiamos a categoria inteira dentro do material.
+
+  \vspace{0.5em}
+  Guardamos só o número:
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Material & quantidade & categoriaId \\
+    \midrule
+    Caneta & 10 & 1 \\
+    Caderno & 5 & 1 \\
+    Mouse & 3 & 2 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  A categoria 1 é Papelaria.\\
+  Se o nome da categoria mudar, o material continua ligado ao id 1.
+\end{frame}
+
+\begin{frame}{Os quatro verbos continuam iguais}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Ação & Verbo HTTP & O que faz \\
+    \midrule
+    Listar / ler & GET & Lê, não muda nada \\
+    Cadastrar & POST & Cria um item novo \\
+    Editar & PUT & Troca os dados de um item \\
+    Excluir & DELETE & Apaga um item \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  Hoje o POST ganha um trabalho extra:\\
+  achar os dois cadastros e conferir a quantidade.
+\end{frame}
+
+% #############################################################################
+\section{A classe do meio}
+
+\begin{frame}{O problema de hoje}
+  Na biblioteca, Maria quer levar Dom Casmurro.
+
+  \vspace{0.5em}
+  Não dá para colocar o livro dentro do leitor.\\
+  O leitor levaria um livro só, para sempre.
+
+  \vspace{0.5em}
+  Não dá para colocar o leitor dentro do livro.\\
+  O livro serviria para uma pessoa só.
+
+  \vspace{0.5em}
+  \begin{block}{Pergunta de hoje}
+    Onde gravamos o encontro dos dois,\\
+    com a quantidade que saiu da prateleira?
+  \end{block}
+\end{frame}
+
+\begin{frame}{Por que um id só não resolve}
+  No 1{:}N, o material aponta para \textbf{uma} categoria.
+
+  \vspace{0.5em}
+  O empréstimo aponta para \textbf{dois} lados:
+  \begin{itemize}
+    \item quem leva --- o leitor
+    \item o que leva --- o livro
+  \end{itemize}
+
+  \vspace{0.5em}
+  E ainda precisa de coisa própria:
+  \begin{itemize}
+    \item um id
+    \item a quantidade
+  \end{itemize}
+
+  \vspace{0.4em}
+  Isso não cabe em \texttt{leitorId} dentro do livro.\\
+  Nem em \texttt{livroId} dentro do leitor.
+\end{frame}
+
+\begin{frame}{A classe do meio}
+  Criamos um cadastro novo.\\
+  Cada linha é um encontro.
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{llll}
+    \toprule
+    id & leitorId & livroId & quantidade \\
+    \midrule
+    1 & 1 Maria & 1 Dom Casmurro & 1 \\
+    2 & 3 Helena & 3 Capitaes da Areia & 2 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  Maria continua na lista de leitores.\\
+  O livro continua na lista de livros.\\
+  O empréstimo só guarda os ids e a quantidade.
+\end{frame}
+
+\begin{frame}{O desenho}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.6cm, minimum height=0.9cm,
+                  font=\small},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (lei) {Leitor};
+    \node[box, fill=yellow!25, right=2.0cm of lei] (emp) {Emprestimo};
+    \node[box, fill=green!20, right=2.0cm of emp] (liv) {Livro};
+
+    \draw[seta] (lei) -- (emp);
+    \draw[seta] (liv) -- (emp);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.6em}
+  O amarelo é a classe do meio.\\
+  Sem ela, leitor e livro não se encontram.
+
+  \vspace{0.4em}
+  Um leitor tem vários empréstimos.\\
+  Um livro aparece em vários empréstimos.\\
+  Cada empréstimo, neste primeiro passo, aponta para \textbf{um} livro.
+\end{frame}
+
+\begin{frame}{Dois passos na aula}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Passo & O que a classe do meio guarda \\
+    \midrule
+    1 & Um leitor e \textbf{um} livro, com quantidade \\
+    2 & Um leitor e uma \textbf{lista} de livros \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  Primeiro a gente faz o passo 1 funcionar na tela.\\
+  Só depois a lista.
+
+  \vspace{0.5em}
+  No StockSales é a mesma ordem:\\
+  um produto, depois vários produtos.
+\end{frame}
+
+\begin{frame}{O que não vamos usar hoje}
+  \begin{itemize}
+    \item Banco de dados
+    \item Anotações do tipo \texttt{@ManyToMany}
+    \item JPA
+    \item Data de empréstimo
+  \end{itemize}
+
+  \vspace{0.5em}
+  Continuamos com lista na memória e um \texttt{int}\\
+  guardando o id do outro cadastro.
+
+  \vspace{0.5em}
+  O raciocínio é o mesmo que o banco vai usar depois.\\
+  Só a ferramenta muda.
+\end{frame}
+
+% #############################################################################
+\section{Projeto biblioteca}
+
+\begin{frame}{O projeto biblioteca}
+  Projeto novo. Não é o laboratorio.
+
+  \vspace{0.5em}
+  \begin{block}{O que já está pronto}
+    Livro e leitor com GET, POST, PUT e DELETE.\\
+    Telas com formulário. Axios já chama a API de empréstimo.
+  \end{block}
+
+  \vspace{0.5em}
+  Se a API ainda não existe, a tela avisa.\\
+  Quando o Java aparecer, a lista responde.
+\end{frame}
+
+\begin{frame}{Passo 1 --- Subir o Spring}
+  \onde{Projeto \textbf{biblioteca}}
+
+  No terminal, dentro da pasta \texttt{biblioteca}:
+
+  \vspace{0.4em}
+  \texttt{./mvnw spring-boot:run}\\
+  {\small No Windows: \texttt{.\textbackslash mvnw.cmd spring-boot:run}}
+
+  \vspace{0.5em}
+  Abram no navegador: \texttt{http://localhost:8080}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Um Spring por vez}
+    Se outro projeto ainda estiver na porta 8080,
+    parem o outro antes.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{O que vocês vão ver na tela}
+  \begin{itemize}
+    \item Livros: Dom Casmurro, O Cortico, Capitaes da Areia, A Hora da Estrela
+    \item Leitores: Maria, Jose, Helena
+    \item Novo empréstimo: dois selects e a quantidade
+    \item Histórico: lista vazia, por enquanto
+  \end{itemize}
+
+  \vspace{0.5em}
+  Cadastrar livro e leitor já funciona.\\
+  Confirmar empréstimo ainda não.\\
+  Esse Java a gente escreve agora.
+\end{frame}
+
+\begin{frame}[fragile]{Onde cada arquivo fica}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+biblioteca/
+  src/main/java/com/entra21/biblioteca/
+    BibliotecaApplication.java
+    Dados.java
+    model/Livro.java
+    model/Leitor.java
+    model/Emprestimo.java          novo
+    controller/LivroController.java
+    controller/LeitorController.java
+    controller/EmprestimoController.java  novo
+  src/main/resources/static/
+    emprestimos-novo.html
+    emprestimos.html
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Emprestimos em Dados}
+  \onde{Projeto \textbf{biblioteca}\\
+        Arquivo \texttt{Dados.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public static ArrayList<Emprestimo> emprestimos =
+    new ArrayList<>();
+public static int proximoIdEmprestimo = 1;
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Import de \texttt{Emprestimo} no topo do arquivo.
+
+  \vspace{0.4em}
+  Sem isso, o Controller não tem onde guardar.
+\end{frame}
+
+\begin{frame}[fragile]{Classe Emprestimo}
+  \onde{Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/biblioteca/model/Emprestimo.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Emprestimo {
+  private int id;
+  private int leitorId;
+  private int livroId;
+  private int quantidade;
+
+  public Emprestimo() {
+  }
+}
+\end{lstlisting}
+
+  Construtor vazio e os gets e sets dos quatro atributos.\\
+  O vazio é obrigatório no POST.
+\end{frame}
+
+\begin{frame}[fragile]{O JSON que a tela já manda}
+  Vocês não mexem no JavaScript.\\
+  A página já envia isto:
+
+  \vspace{0.4em}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{"leitorId": 1, "livroId": 2, "quantidade": 1}
+\end{lstlisting}
+
+  \vspace{0.5em}
+  O servidor faz o resto:
+  \begin{enumerate}
+    \item Achar o leitor
+    \item Achar o livro
+    \item Se a quantidade do livro for menor, recusar
+    \item Diminuir a quantidade do livro
+    \item Guardar o empréstimo
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Uma função só para achar}
+  \onde{\texttt{controller/EmprestimoController.java}, arquivo novo}
+
+  Em vez de um \texttt{for} gigante dentro do POST,\\
+  uma função pequena devolve o livro ou \texttt{null}.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+public Livro acharLivro(int id) {
+  for (int i = 0; i < Dados.livros.size(); i++) {
+    if (Dados.livros.get(i).getId() == id) {
+      return Dados.livros.get(i);
+    }
+  }
+  return null;
+}
+\end{lstlisting}
+
+  Façam a mesma ideia para \texttt{acharLeitor}.
+\end{frame}
+
+\begin{frame}[fragile]{GET dos empréstimos}
+  \onde{Ainda em \texttt{EmprestimoController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@RestController
+public class EmprestimoController {
+
+  @GetMapping("/api/emprestimos")
+  public ArrayList<Emprestimo> listar() {
+    return Dados.emprestimos;
+  }
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Testem no navegador:\\
+  \texttt{http://localhost:8080/api/emprestimos}
+
+  \vspace{0.3em}
+  Deve aparecer \texttt{[]}. Lista vazia, mas a rota existe.
+\end{frame}
+
+\begin{frame}[fragile]{POST --- achar leitor e livro}
+  \onde{Ainda no método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/api/emprestimos")
+public Emprestimo cadastrar(@RequestBody Emprestimo pedido) {
+  Leitor leitor = acharLeitor(pedido.getLeitorId());
+  if (leitor == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Leitor nao encontrado");
+  }
+
+  Livro livro = acharLivro(pedido.getLivroId());
+  if (livro == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Livro nao encontrado");
+  }
+\end{lstlisting}
+
+  O método ainda não acabou.
+\end{frame}
+
+\begin{frame}[fragile]{POST --- quantidade e gravação}
+  \onde{Ainda no mesmo método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+  if (livro.getQuantidade() < pedido.getQuantidade()) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Quantidade insuficiente");
+  }
+
+  pedido.setId(Dados.proximoIdEmprestimo);
+  Dados.proximoIdEmprestimo = Dados.proximoIdEmprestimo + 1;
+  livro.setQuantidade(
+      livro.getQuantidade() - pedido.getQuantidade());
+  Dados.emprestimos.add(pedido);
+  return pedido;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Imports deste Controller}
+  \begin{itemize}
+    \item \texttt{Dados}, \texttt{Emprestimo}, \texttt{Leitor}, \texttt{Livro}
+    \item \texttt{HttpStatus}
+    \item \texttt{ResponseStatusException}
+    \item \texttt{ArrayList}
+    \item As anotações \texttt{GetMapping}, \texttt{PostMapping},
+          \texttt{RequestBody}, \texttt{RestController}
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se faltar um import, o VS Code sublinha em vermelho.\\
+  Aceitem o import que ele oferece.
+\end{frame}
+
+\begin{frame}{Conferindo o passo 1}
+  \begin{itemize}
+    \item [ ] \texttt{/api/emprestimos} devolve \texttt{[]}
+    \item [ ] Maria leva 1 Dom Casmurro --- a tela diz registrado
+    \item [ ] Em Livros, a quantidade do titulo caiu
+    \item [ ] O histórico mostra o nome, não só o id
+    \item [ ] Pedir mais exemplares do que existe --- a tela recusa
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se a quantidade não cair, o \texttt{setQuantidade} não rodou.\\
+  Se o histórico continuar vazio, o GET não devolveu a lista.
+\end{frame}
+
+\begin{frame}{Erros que mais aparecem}
+  \begin{itemize}
+    \item 404 no POST --- o Controller não compilou ou o Spring
+          não reiniciou
+    \item Lista de livros some --- o seed não está no
+          \texttt{if (Dados.livros.isEmpty())}
+    \item Quantidade não diminui --- acharam o livro e não
+          gravaram de volta no objeto
+    \item Porta 8080 ocupada
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Vários livros}
+
+\begin{frame}{Um empréstimo, vários livros}
+  Na vida real a pessoa sai com mais de um título.
+
+  \vspace{0.5em}
+  Um campo \texttt{livroId} não basta.\\
+  Precisamos de uma lista dentro do empréstimo.
+
+  \vspace{0.5em}
+  Cada linha da lista é um \textbf{item}:\\
+  este livro, esta quantidade.
+
+  \vspace{0.5em}
+  O POST de um livro \textbf{continua no ar}.\\
+  Vamos acrescentar outro endereço.
+\end{frame}
+
+\begin{frame}{O desenho com lista}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.2cm, minimum height=0.8cm,
+                  font=\small},
+      meio/.style={draw, rounded corners, align=center,
+                   minimum width=1.8cm, minimum height=0.55cm,
+                   font=\scriptsize},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (lei) {Helena};
+    \node[box, fill=yellow!25, right=1.6cm of lei] (emp) {Emprestimo};
+    \node[meio, fill=orange!25, right=1.4cm of emp] (i1) {item 1};
+    \node[meio, fill=orange!25, below=0.25cm of i1] (i2) {item 2};
+    \node[box, fill=green!20, right=1.4cm of i1] (l1) {Dom Casmurro};
+    \node[box, fill=green!20, below=0.25cm of l1] (l2) {O Cortico};
+
+    \draw[seta] (lei) -- (emp);
+    \draw[seta] (emp) -- (i1);
+    \draw[seta] (emp) -- (i2);
+    \draw[seta] (i1) -- (l1);
+    \draw[seta] (i2) -- (l2);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3em}
+  Um empréstimo. Dois itens. Dois livros.
+\end{frame}
+
+\begin{frame}[fragile]{Classe ItemEmprestimo}
+  \onde{Arquivo novo:\\
+        \texttt{model/ItemEmprestimo.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class ItemEmprestimo {
+  private int livroId;
+  private int quantidade;
+
+  public ItemEmprestimo() {
+  }
+}
+\end{lstlisting}
+
+  Gets e sets dos dois atributos.\\
+  Esta classe não precisa de id próprio nesta aula.
+\end{frame}
+
+\begin{frame}[fragile]{Lista de itens no Emprestimo}
+  \onde{\texttt{model/Emprestimo.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+private ArrayList<ItemEmprestimo> itens;
+
+public ArrayList<ItemEmprestimo> getItens() {
+  return itens;
+}
+
+public void setItens(ArrayList<ItemEmprestimo> itens) {
+  this.itens = itens;
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Os campos \texttt{livroId} e \texttt{quantidade} ficam.\\
+  O POST de um livro ainda usa eles.
+\end{frame}
+
+\begin{frame}[fragile]{O JSON da tela de vários livros}
+  A página \texttt{emprestimos-varios.html} já manda:
+
+  \vspace{0.3em}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{
+  "leitorId": 3,
+  "itens": [
+    {"livroId": 1, "quantidade": 1},
+    {"livroId": 2, "quantidade": 1}
+  ]
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Endereço: POST \texttt{/api/emprestimos/itens}
+\end{frame}
+
+\begin{frame}{Dois fors, nessa ordem}
+  Primeiro conferimos \textbf{tudo}.\\
+  Só depois baixamos quantidade.
+
+  \vspace{0.5em}
+  Se o segundo livro não tiver exemplar,\\
+  o primeiro também não sai.
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item \texttt{for} nos itens: achar o livro, conferir quantidade
+    \item Se algum falhar, recusar o empréstimo inteiro
+    \item Outro \texttt{for}: diminuir a quantidade de cada livro
+    \item Gravar o empréstimo
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{POST de vários --- conferir}
+  \onde{\texttt{EmprestimoController.java}, método novo}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/api/emprestimos/itens")
+public Emprestimo cadastrarVarios(@RequestBody Emprestimo pedido) {
+  Leitor leitor = acharLeitor(pedido.getLeitorId());
+  if (leitor == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Leitor nao encontrado");
+  }
+
+  for (int i = 0; i < pedido.getItens().size(); i++) {
+    ItemEmprestimo item = pedido.getItens().get(i);
+    Livro livro = acharLivro(item.getLivroId());
+    if (livro == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Livro nao encontrado");
+    }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,shrink=5]{POST de vários --- gravar}
+  \onde{Ainda no mesmo método}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+    if (livro.getQuantidade() < item.getQuantidade()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Quantidade insuficiente");
+    }
+  }
+
+  for (int i = 0; i < pedido.getItens().size(); i++) {
+    ItemEmprestimo item = pedido.getItens().get(i);
+    Livro livro = acharLivro(item.getLivroId());
+    livro.setQuantidade(
+        livro.getQuantidade() - item.getQuantidade());
+  }
+
+  pedido.setId(Dados.proximoIdEmprestimo);
+  Dados.proximoIdEmprestimo = Dados.proximoIdEmprestimo + 1;
+  Dados.emprestimos.add(pedido);
+  return pedido;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Conferindo o passo 2}
+  \begin{itemize}
+    \item [ ] A tela Vários livros deixa acrescentar dois títulos
+    \item [ ] Confirmar registra e as duas quantidades caem
+    \item [ ] O histórico mostra os dois nomes
+    \item [ ] O empréstimo de um livro ainda funciona
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se não der tempo agora, a gente faz a mesma lista\\
+  no StockSales, depois do intervalo.
+\end{frame}
+
+\begin{frame}{Checklist da Parte 1}
+  \begin{itemize}
+    \item [ ] Estou no projeto \texttt{biblioteca}?
+    \item [ ] \texttt{Dados} tem a lista de empréstimos?
+    \item [ ] \texttt{/api/emprestimos} existe?
+    \item [ ] A quantidade do livro diminui?
+    \item [ ] A tela recusa quando não há exemplar?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Intervalo}
+  \begin{center}
+    \Large Retomamos às \textbf{20h20}\\[0.8em]
+    \normalsize
+    Fechem a \texttt{biblioteca}.\\
+    Parem o Spring.\\
+    Na segunda parte abrimos o \textbf{StockSales}.
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{Parte 2 --- StockSales}
+
+\begin{frame}{Mudamos de projeto}
+  \onde{Agora é o projeto \textbf{StockSales}.\\
+        A biblioteca já está encerrada.}
+
+  Parem o Spring da biblioteca.\\
+  Abram a pasta do StockSales e subam de novo.
+\end{frame}
+
+\begin{frame}{Onde o StockSales está}
+  A loja já tem produto e cliente.
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Listas em \texttt{Dados}
+    \item Telas de cadastro
+    \item Telas de venda já prontas, com Axios
+  \end{itemize}
+
+  \vspace{0.5em}
+  Ainda \textbf{não} tem a classe \texttt{Venda}.\\
+  Ainda \textbf{não} tem o Controller de venda.
+
+  \vspace{0.5em}
+  É o empréstimo, com outro nome, e com preço.
+\end{frame}
+
+\begin{frame}{O desenho da venda de hoje}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.6cm, minimum height=0.9cm,
+                  font=\small},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (cli) {Cliente};
+    \node[box, fill=yellow!25, right=2.0cm of cli] (ven) {Venda};
+    \node[box, fill=green!20, right=2.0cm of ven] (pro) {Produto};
+
+    \draw[seta] (cli) -- (ven);
+    \draw[seta] (pro) -- (ven);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.6em}
+  Um cliente tem várias vendas.\\
+  Um produto aparece em várias vendas.\\
+  Cada venda, neste primeiro passo, aponta para \textbf{um} produto.
+\end{frame}
+
+\begin{frame}{O que a venda tem a mais}
+  Igual ao empréstimo:
+  \begin{itemize}
+    \item \texttt{clienteId}
+    \item \texttt{produtoId}
+    \item \texttt{quantidade}
+  \end{itemize}
+
+  \vspace{0.4em}
+  Extra da loja:
+  \begin{itemize}
+    \item \texttt{total} --- preço vezes quantidade
+    \item o estoque do produto diminui
+  \end{itemize}
+
+  \vspace{0.4em}
+  O JavaScript \textbf{não} calcula o total.\\
+  Quem calcula é o servidor.
+\end{frame}
+
+\begin{frame}[fragile]{Vendas em Dados}
+  \onde{Projeto \textbf{StockSales}\\
+        Arquivo \texttt{Dados.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public static ArrayList<Venda> vendas = new ArrayList<>();
+public static int proximoIdVenda = 1;
+\end{lstlisting}
+
+  Import de \texttt{Venda} no topo.
+\end{frame}
+
+\begin{frame}[fragile]{Classe Venda}
+  \onde{Arquivo novo:\\
+        \texttt{src/main/java/com/entra21/stocksales/model/Venda.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class Venda {
+  private int id;
+  private int clienteId;
+  private int produtoId;
+  private int quantidade;
+  private double total;
+
+  public Venda() {
+  }
+}
+\end{lstlisting}
+
+  Construtor vazio e os gets e sets dos cinco atributos.
+\end{frame}
+
+\begin{frame}[fragile]{O JSON da nova venda}
+  A página \texttt{vendas-nova.html} já manda:
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{"clienteId": 1, "produtoId": 2, "quantidade": 3}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O servidor:
+  \begin{enumerate}
+    \item Acha cliente e produto
+    \item Se \texttt{estoque < quantidade}, recusa
+    \item \texttt{total = preco * quantidade}
+    \item Diminui o estoque
+    \item Guarda a venda
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{acharCliente e acharProduto}
+  \onde{\texttt{controller/VendaController.java}, arquivo novo}
+
+  Copiem a ideia da biblioteca.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+public Produto acharProduto(int id) {
+  for (int i = 0; i < Dados.produtos.size(); i++) {
+    if (Dados.produtos.get(i).getId() == id) {
+      return Dados.produtos.get(i);
+    }
+  }
+  return null;
+}
+\end{lstlisting}
+
+  A função \texttt{acharCliente} é a mesma, na lista
+  \texttt{Dados.clientes}.
+\end{frame}
+
+\begin{frame}[fragile]{GET e começo do POST}
+  \onde{Ainda em \texttt{VendaController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@GetMapping("/api/vendas")
+public ArrayList<Venda> listar() {
+  return Dados.vendas;
+}
+
+@PostMapping("/api/vendas")
+public Venda cadastrar(@RequestBody Venda pedido) {
+  Cliente cliente = acharCliente(pedido.getClienteId());
+  if (cliente == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Cliente nao encontrado");
+  }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,shrink=5]{POST --- estoque, total, gravação}
+  \onde{Ainda no método \texttt{cadastrar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+  Produto produto = acharProduto(pedido.getProdutoId());
+  if (produto == null) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Produto nao encontrado");
+  }
+
+  if (produto.getEstoque() < pedido.getQuantidade()) {
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST, "Estoque insuficiente");
+  }
+
+  pedido.setId(Dados.proximoIdVenda);
+  Dados.proximoIdVenda = Dados.proximoIdVenda + 1;
+  pedido.setTotal(produto.getPreco() * pedido.getQuantidade());
+  produto.setEstoque(
+      produto.getEstoque() - pedido.getQuantidade());
+  Dados.vendas.add(pedido);
+  return pedido;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{O caminho da primeira venda}
+  \begin{enumerate}
+    \item A pessoa escolhe Ana, Mouse Gamer, quantidade 2
+    \item JS manda POST \texttt{/api/vendas}
+    \item Servidor acha cliente e produto em \texttt{Dados}
+    \item Confere estoque, calcula total, diminui estoque
+    \item A tela de produtos, ao recarregar, já mostra
+          o estoque menor
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Conferindo a venda de um produto}
+  \begin{itemize}
+    \item [ ] Nova venda baixa o estoque
+    \item [ ] O histórico mostra o nome e o total
+    \item [ ] Vender acima do estoque mostra a mensagem
+    \item [ ] O total não vem digitado na tela
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Venda com vários produtos}
+  Mesma evolução da biblioteca.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Classe \texttt{ItemVenda}: \texttt{produtoId},
+          \texttt{quantidade}, \texttt{subtotal}
+    \item Campo \texttt{itens} na \texttt{Venda}
+    \item POST \texttt{/api/vendas/itens}
+    \item A tela \texttt{vendas-varios.html} já existe
+  \end{itemize}
+
+  \vspace{0.5em}
+  O POST de um produto permanece.
+\end{frame}
+
+\begin{frame}[fragile]{Classe ItemVenda}
+  \onde{Arquivo novo: \texttt{model/ItemVenda.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public class ItemVenda {
+  private int produtoId;
+  private int quantidade;
+  private double subtotal;
+
+  public ItemVenda() {
+  }
+}
+\end{lstlisting}
+
+  Gets e sets dos três atributos.\\
+  O \texttt{subtotal} a tela não manda. O servidor preenche.
+\end{frame}
+
+\begin{frame}[fragile]{O JSON de vários produtos}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+{
+  "clienteId": 1,
+  "itens": [
+    {"produtoId": 2, "quantidade": 1},
+    {"produtoId": 4, "quantidade": 2}
+  ]
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Primeiro \texttt{for}: conferir estoque de cada item.\\
+  Segundo \texttt{for}: \texttt{subtotal}, somar o total, baixar estoque.
+\end{frame}
+
+\begin{frame}[fragile]{Somar o total}
+  \onde{No segundo \texttt{for} de \texttt{cadastrarVarios}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+double total = 0;
+for (int i = 0; i < pedido.getItens().size(); i++) {
+  ItemVenda item = pedido.getItens().get(i);
+  Produto produto = acharProduto(item.getProdutoId());
+  item.setSubtotal(produto.getPreco() * item.getQuantidade());
+  total = total + item.getSubtotal();
+  produto.setEstoque(
+      produto.getEstoque() - item.getQuantidade());
+}
+pedido.setTotal(total);
+\end{lstlisting}
+
+  \texttt{total = total + ...} vai juntando cada subtotal.
+\end{frame}
+
+\begin{frame}{Conferindo vários produtos}
+  \begin{itemize}
+    \item [ ] Ana leva Mouse e Headset na mesma venda
+    \item [ ] Os dois estoques caem
+    \item [ ] O total é a soma dos dois subtotais
+    \item [ ] Se um produto não tem estoque, a venda inteira
+          é recusada
+    \item [ ] A venda de um produto continua funcionando
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O que não entra hoje}
+  \begin{itemize}
+    \item Cancelar venda e devolver estoque
+    \item Banco de dados
+    \item Login
+    \item Anotações JPA
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{block}{Meta no StockSales}
+    Venda de um item, com estoque baixando e total no servidor.\\
+    Se der tempo, vários itens na mesma venda.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Critérios de aceite}
+  \begin{itemize}
+    \item [ ] Venda grava \texttt{clienteId} e \texttt{produtoId}
+    \item [ ] Total é calculado no servidor
+    \item [ ] Estoque diminui
+    \item [ ] Estoque insuficiente recusa a venda
+    \item [ ] Histórico mostra o \textbf{nome}, não só o id
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Recapitulando}
+
+\begin{frame}{O que vimos hoje}
+  \begin{enumerate}
+    \item 1{:}N guarda um id no lado dos muitos
+    \item Quando dois cadastros se encontram, nasce uma classe nova
+    \item Essa classe guarda os dois ids e a quantidade
+    \item Uma lista de itens deixa vários produtos na mesma venda
+    \item Conferir tudo antes de baixar estoque
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Os dois desenhos, lado a lado}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    biblioteca & StockSales \\
+    \midrule
+    Leitor e Livro & Cliente e Produto \\
+    Emprestimo no meio & Venda no meio \\
+    quantidade do livro cai & estoque do produto cai \\
+    lista de itens & lista de itens, com total \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  Mesma ideia. Nomes diferentes.
+\end{frame}
+
+\begin{frame}{Na próxima aula}
+  \begin{block}{Aula 07}
+    \begin{itemize}
+      \item Validação dos dados que chegam
+      \item Mensagem de erro mais clara
+      \item Organizar o que já cresceu no StockSales
+    \end{itemize}
+  \end{block}
+
+  \vspace{0.6em}
+  Tragam o StockSales com a venda de um item funcionando.
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \Huge Obrigado!\\[1.2em]
+    \normalsize Mauricio Duailibi Neto\\
+    Turma Java Entra21
+  \end{center}
+\end{frame}
+
+\end{document}

@@ -21,7 +21,8 @@ spring_framework/
 ├── ola-spring/             ← projeto feito juntos na Aula 01
 ├── aula2/                  ← exercícios da Aula 02
 ├── cadastro-alunos/        ← CRUD da Aula 03
-├── laboratorio/            ← exercícios da primeira parte, a partir da Aula 04
+├── laboratorio/            ← exercícios da primeira parte, Aulas 04 e 05
+├── biblioteca/             ← exercícios da primeira parte, a partir da Aula 06
 └── stocksales/             ← projeto da loja, segunda parte de cada aula
 ```
 
@@ -42,12 +43,12 @@ Depois abra no navegador: [http://localhost:8080](http://localhost:8080)
 Com LaTeX instalado (TeX Live / MiKTeX):
 
 ```bash
-cd slides/aula-05-relacionamentos
-pdflatex slides-aula-05.tex
-pdflatex slides-aula-05.tex
+cd slides/aula-06-classe-do-meio
+pdflatex slides-aula-06.tex
+pdflatex slides-aula-06.tex
 ```
 
-(Com Tectonic: `tectonic slides-aula-05.tex`.)
+(Com Tectonic: `tectonic slides-aula-06.tex`.)
 
 ## Disciplinas anteriores
 

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockSales - Clientes</title>
+    <title>StockSales - Nova venda</title>
 
     <link rel="stylesheet" href="css/estilo.css" />
 </head>
-<body class="pagina-clientes">
+<body class="pagina-venda">
 
     <header class="topo">
         <a class="marca" href="/">
@@ -17,8 +17,8 @@
         <nav class="menu">
             <a href="/">Início</a>
             <a href="/produtos.html">Produtos</a>
-            <a href="/clientes.html" class="ativo">Clientes</a>
-            <a href="/vendas-nova.html">Nova venda</a>
+            <a href="/clientes.html">Clientes</a>
+            <a href="/vendas-nova.html" class="ativo">Nova venda</a>
             <a href="/vendas.html">Histórico</a>
             <a href="/vendas-varios.html">Vários produtos</a>
         </nav>
@@ -26,32 +26,32 @@
 
     <main class="conteudo">
         <section class="cabecalho-pagina">
-            <h1>Lista de clientes</h1>
+            <h1>Nova venda</h1>
             <p class="subtitulo">
-                Cadastre um cliente e veja a lista atualizar pela API.
+                Um cliente e um produto, com a quantidade.
             </p>
         </section>
 
-        <form id="form-cliente">
+        <form id="form-venda">
             <div class="campo">
-                <label for="nome">Nome</label>
-                <input id="nome" placeholder="Ex.: Ana Silva" autocomplete="off" />
+                <label for="clienteId">Cliente</label>
+                <select id="clienteId"></select>
             </div>
             <div class="campo">
-                <label for="email">E-mail</label>
-                <input id="email" placeholder="Ex.: ana@email.com" autocomplete="off" />
+                <label for="produtoId">Produto</label>
+                <select id="produtoId"></select>
             </div>
             <div class="campo campo-curto">
-                <label for="telefone">Telefone</label>
-                <input id="telefone" placeholder="Ex.: 1199" autocomplete="off" />
+                <label for="quantidade">Quantidade</label>
+                <input id="quantidade" type="number" min="1" step="1" value="1" />
             </div>
-            <button id="btn-cadastro" type="submit">Cadastrar</button>
+            <button id="btn-vender" type="submit">Confirmar venda</button>
         </form>
 
-        <ul id="lista-clientes"></ul>
+        <p id="mensagem"></p>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="js/clientes.js"></script>
+    <script src="js/vendas-nova.js"></script>
 </body>
 </html>

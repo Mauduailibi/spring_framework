@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca - Vários livros</title>
+
+    <link rel="stylesheet" href="css/estilo.css" />
+</head>
+<body class="pagina-varios">
+
+    <header class="topo">
+        <a class="marca" href="/">
+            <span class="marca-icone" aria-hidden="true">BB</span>
+            Biblioteca
+        </a>
+        <nav class="menu">
+            <a href="/">Início</a>
+            <a href="/livros.html">Livros</a>
+            <a href="/leitores.html">Leitores</a>
+            <a href="/emprestimos-novo.html">Novo empréstimo</a>
+            <a href="/emprestimos.html">Histórico</a>
+            <a href="/emprestimos-varios.html" class="ativo">Vários livros</a>
+        </nav>
+    </header>
+
+    <main class="conteudo">
+        <section class="cabecalho-pagina">
+            <h1>Empréstimo com vários livros</h1>
+            <p class="subtitulo">
+                Um leitor e uma lista de livros. Acrescente um a um e confirme.
+            </p>
+        </section>
+
+        <form id="form-item">
+            <div class="campo">
+                <label for="leitorId">Leitor</label>
+                <select id="leitorId"></select>
+            </div>
+            <div class="campo">
+                <label for="livroId">Livro</label>
+                <select id="livroId"></select>
+            </div>
+            <div class="campo campo-curto">
+                <label for="quantidade">Quantidade</label>
+                <input id="quantidade" type="number" min="1" step="1" value="1" />
+            </div>
+            <button id="btn-adicionar" type="submit">Adicionar livro</button>
+        </form>
+
+        <ul id="lista-itens"></ul>
+
+        <div class="acoes">
+            <button id="btn-confirmar" class="botao" type="button">Confirmar empréstimo</button>
+        </div>
+
+        <p id="mensagem"></p>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/emprestimos-varios.js"></script>
+</body>
+</html>

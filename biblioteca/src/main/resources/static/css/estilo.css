@@ -1,21 +1,21 @@
 /*
-  Visual do StockSales.
+  Visual da biblioteca.
   Os alunos não precisam alterar este arquivo nas aulas.
   O Java e o JavaScript continuam iguais: os IDs da página não mudam.
 */
 
 :root {
-    --cor-marca: #0f766e;
-    --cor-marca-escura: #134e4a;
-    --cor-acao: #0d9488;
-    --cor-acao-hover: #0f766e;
-    --cor-fundo: #eef4f2;
+    --cor-marca: #3730a3;
+    --cor-marca-escura: #1e1b4b;
+    --cor-acao: #4f46e5;
+    --cor-acao-hover: #4338ca;
+    --cor-fundo: #eef0f8;
     --cor-card: #ffffff;
-    --cor-borda: #d7e3df;
-    --cor-texto: #134e4a;
-    --cor-suave: #5b7470;
+    --cor-borda: #d7dbe8;
+    --cor-texto: #1e1b4b;
+    --cor-suave: #5b6174;
     --cor-placeholder: #94a3b8;
-    --sombra: 0 10px 28px rgba(15, 76, 74, 0.08);
+    --sombra: 0 10px 28px rgba(30, 27, 75, 0.08);
     --raio: 16px;
     --largura: 920px;
 }
@@ -32,7 +32,7 @@ body {
     color: var(--cor-texto);
 
     background:
-        radial-gradient(circle at top left, rgba(13, 148, 136, 0.16), transparent 36%),
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.16), transparent 36%),
         radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 32%),
         var(--cor-fundo);
 }
@@ -81,10 +81,10 @@ body {
     font-size: 0.78rem;
     font-weight: 800;
 
-    background: linear-gradient(135deg, var(--cor-acao), #115e59);
+    background: linear-gradient(135deg, var(--cor-acao), #312e81);
     border-radius: 10px;
 
-    box-shadow: 0 6px 14px rgba(13, 148, 136, 0.28);
+    box-shadow: 0 6px 14px rgba(79, 70, 229, 0.28);
 }
 
 .menu {
@@ -108,7 +108,7 @@ body {
 .menu a:hover,
 .menu a.ativo {
     color: var(--cor-marca-escura);
-    background: rgba(13, 148, 136, 0.12);
+    background: rgba(79, 70, 229, 0.12);
 }
 
 
@@ -154,7 +154,7 @@ h1 {
     letter-spacing: 0.04em;
     text-transform: uppercase;
 
-    background: rgba(13, 148, 136, 0.12);
+    background: rgba(79, 70, 229, 0.12);
     border-radius: 999px;
 }
 
@@ -187,8 +187,8 @@ h1 {
 
 .card-atalho:hover {
     transform: translateY(-3px);
-    border-color: #99d5ce;
-    box-shadow: 0 16px 32px rgba(15, 76, 74, 0.12);
+    border-color: #a5b4fc;
+    box-shadow: 0 16px 32px rgba(30, 27, 75, 0.12);
 }
 
 .card-atalho-icone {
@@ -202,7 +202,7 @@ h1 {
     color: var(--cor-marca);
     font-size: 1.2rem;
 
-    background: rgba(13, 148, 136, 0.12);
+    background: rgba(79, 70, 229, 0.12);
     border-radius: 12px;
 }
 
@@ -286,7 +286,7 @@ form input:focus,
 form select:focus,
 .campo select:focus {
     border-color: var(--cor-acao);
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.14);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
 }
 
 form select,
@@ -306,19 +306,19 @@ form button,
     font-weight: 700;
     color: white;
 
-    background: linear-gradient(135deg, var(--cor-acao), #115e59);
+    background: linear-gradient(135deg, var(--cor-acao), #312e81);
     border: none;
     border-radius: 10px;
     cursor: pointer;
 
-    box-shadow: 0 8px 18px rgba(13, 148, 136, 0.28);
+    box-shadow: 0 8px 18px rgba(79, 70, 229, 0.28);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 form button:hover,
 .botao:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 22px rgba(13, 148, 136, 0.34);
+    box-shadow: 0 12px 22px rgba(79, 70, 229, 0.34);
 }
 
 form button:active,
@@ -331,7 +331,7 @@ form button:active,
 }
 
 
-/* Select (Aula 05 — cliente, produto, filtros) */
+/* Select */
 
 select {
     width: 100%;
@@ -341,7 +341,7 @@ select {
     font-family: inherit;
     color: var(--cor-texto);
     background-color: #ffffff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20'%3E%3Cpath fill='%235b7470' d='M5.3 7.3a1 1 0 0 1 1.4 0L10 10.58l3.3-3.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.42z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20'%3E%3Cpath fill='%235b6174' d='M5.3 7.3a1 1 0 0 1 1.4 0L10 10.58l3.3-3.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.42z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 16px;
@@ -357,46 +357,11 @@ select {
 
 select:focus {
     border-color: var(--cor-acao);
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.14);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
 }
 
 
-/* Filtro (ex.: filtrar lista por categoria ou cliente) */
-
-p:has(#filtro-categoria),
-p:has(select[id*="filtro"]),
-.filtro {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-
-    margin: 0 0 20px;
-    padding: 16px 20px;
-
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    box-shadow: var(--sombra);
-}
-
-p:has(#filtro-categoria) label,
-p:has(select[id*="filtro"]) label,
-.filtro label {
-    margin: 0;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--cor-suave);
-}
-
-#filtro-categoria,
-select[id*="filtro"] {
-    flex: 1;
-    min-width: 180px;
-}
-
-
-/* Mensagens da página (some quando está vazia) */
+/* Mensagens da página */
 
 #mensagem {
     margin: 0;
@@ -433,17 +398,22 @@ select[id*="filtro"] {
 
 /* Listas preenchidas pelo JS */
 
+#lista-livros,
+#lista-leitores,
+#lista-emprestimos,
+#lista-itens,
 #lista-produtos,
 #lista-clientes,
-#lista-vendas,
-#lista-itens {
+#lista-vendas {
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-#lista-produtos:empty::before {
-    content: "Nenhum produto cadastrado ainda.";
+#lista-livros:empty::before,
+#lista-leitores:empty::before,
+#lista-emprestimos:empty::before,
+#lista-itens:empty::before {
     display: block;
     padding: 28px 20px;
     text-align: center;
@@ -453,42 +423,25 @@ select[id*="filtro"] {
     border-radius: var(--raio);
 }
 
-#lista-clientes:empty::before {
-    content: "Nenhum cliente cadastrado ainda.";
-    display: block;
-    padding: 28px 20px;
-    text-align: center;
-    color: var(--cor-suave);
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px dashed var(--cor-borda);
-    border-radius: var(--raio);
+#lista-livros:empty::before {
+    content: "Nenhum livro cadastrado ainda.";
 }
 
-#lista-vendas:empty::before {
-    content: "Nenhuma venda registrada ainda.";
-    display: block;
-    padding: 28px 20px;
-    text-align: center;
-    color: var(--cor-suave);
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px dashed var(--cor-borda);
-    border-radius: var(--raio);
+#lista-leitores:empty::before {
+    content: "Nenhum leitor cadastrado ainda.";
+}
+
+#lista-emprestimos:empty::before {
+    content: "Nenhum emprestimo registrado ainda.";
 }
 
 #lista-itens:empty::before {
-    content: "Nenhum produto nesta lista ainda.";
-    display: block;
-    padding: 28px 20px;
-    text-align: center;
-    color: var(--cor-suave);
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px dashed var(--cor-borda);
-    border-radius: var(--raio);
+    content: "Nenhum livro nesta lista ainda.";
 }
 
-#lista-produtos li,
-#lista-clientes li,
-#lista-vendas li,
+#lista-livros li,
+#lista-leitores li,
+#lista-emprestimos li,
 #lista-itens li {
     margin-bottom: 10px;
     padding: 16px 18px 16px 20px;
@@ -496,7 +449,7 @@ select[id*="filtro"] {
     background: var(--cor-card);
     border: 1px solid var(--cor-borda);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(15, 76, 74, 0.05);
+    box-shadow: 0 4px 12px rgba(30, 27, 75, 0.05);
 
     font-size: 1rem;
     line-height: 1.45;
@@ -505,17 +458,17 @@ select[id*="filtro"] {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-#lista-produtos li:hover,
-#lista-clientes li:hover,
-#lista-vendas li:hover,
+#lista-livros li:hover,
+#lista-leitores li:hover,
+#lista-emprestimos li:hover,
 #lista-itens li:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(15, 76, 74, 0.08);
+    box-shadow: 0 8px 18px rgba(30, 27, 75, 0.08);
 }
 
-#lista-produtos li button,
-#lista-clientes li button,
-#lista-vendas li button,
+#lista-livros li button,
+#lista-leitores li button,
+#lista-emprestimos li button,
 #lista-itens li button {
     margin-left: 10px;
     padding: 7px 12px;
@@ -559,9 +512,7 @@ select[id*="filtro"] {
     .campo,
     .campo-curto,
     form button,
-    form select,
-    #filtro-categoria,
-    select[id*="filtro"] {
+    form select {
         width: 100%;
         flex: none;
     }
