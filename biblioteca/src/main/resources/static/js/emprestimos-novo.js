@@ -42,6 +42,8 @@ document.getElementById("form-emprestimo").addEventListener("submit", function (
         quantidade: Number(document.getElementById("quantidade").value)
     };
 
+    console.log(dados);
+    
     axios.post("/api/emprestimos", dados)
         .then(function () {
             mostrarMensagem("Emprestimo registrado", "ok");
