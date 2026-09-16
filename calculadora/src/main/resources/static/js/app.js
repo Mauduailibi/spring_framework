@@ -67,7 +67,8 @@ form.addEventListener("submit", function (evento) {
     // Rota que o Java precisa implementar:
     // POST /api/calcular
     // body: { numero1, numero2, operacao }
-    // resposta: { resultado }  (opcional: { erro } se der problema, ex.: divisão por zero)
+    // resposta: o mesmo objeto, com resultado preenchido
+    // (opcional: erro, se der problema, ex.: divisão por zero)
     axios.post("/api/calcular", {
         numero1: numero1,
         numero2: numero2,

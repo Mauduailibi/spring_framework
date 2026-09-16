@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMC · Entra21</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+
+    <div class="folha">
+        <header>
+            <p class="marca">Entra21 · Saúde</p>
+            <h1>Calculadora de IMC</h1>
+            <p class="subtitulo">Informe peso e altura. O Java calcula o índice e devolve a classificação.</p>
+        </header>
+
+        <div class="painel">
+            <form id="form-imc">
+                <label for="peso">Peso</label>
+                <div class="entrada">
+                    <input id="peso" name="peso" type="number" step="any" min="0" placeholder="Ex.: 70" required>
+                    <span>kg</span>
+                </div>
+
+                <label for="altura">Altura</label>
+                <div class="entrada">
+                    <input id="altura" name="altura" type="number" step="any" min="0" placeholder="Ex.: 1.70" required>
+                    <span>m</span>
+                </div>
+                <p class="dica">Use metros, por exemplo 1.70 — não 170.</p>
+
+                <button id="btn-calcular" type="submit">Calcular IMC</button>
+            </form>
+
+            <section class="resultado" aria-live="polite">
+                <p class="rotulo">Seu índice</p>
+                <p id="valor-imc" class="valor">—</p>
+                <p id="classificacao" class="classificacao">Preencha os campos para começar</p>
+                <p id="mensagem"></p>
+
+                <ul class="faixa" id="faixa">
+                    <li data-classe="Abaixo do peso">Abaixo</li>
+                    <li data-classe="Peso normal">Normal</li>
+                    <li data-classe="Sobrepeso">Sobrepeso</li>
+                    <li data-classe="Obesidade">Obesidade</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
