@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora · Entra21</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+
+    <main class="cartao">
+        <header class="cabecalho">
+            <p class="selo">Entra21 · Spring</p>
+            <h1>Calculadora</h1>
+            <p class="subtitulo">Os números saem daqui. O Java faz a conta.</p>
+        </header>
+
+        <section class="visor" aria-live="polite">
+            <p id="expressao" class="visor-expressao">Preencha e calcule</p>
+            <p id="resultado" class="visor-resultado">—</p>
+        </section>
+
+        <form id="form-calculo">
+            <div class="campo">
+                <label for="numero1">Primeiro número</label>
+                <input id="numero1" name="numero1" type="number" step="any" placeholder="Ex.: 12" required>
+            </div>
+
+            <div class="campo">
+                <label for="operacao">Operação</label>
+                <select id="operacao" name="operacao" required>
+                    <option value="soma">+ Soma</option>
+                    <option value="subtracao">− Subtração</option>
+                    <option value="multiplicacao">× Multiplicação</option>
+                    <option value="divisao">÷ Divisão</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="numero2">Segundo número</label>
+                <input id="numero2" name="numero2" type="number" step="any" placeholder="Ex.: 4" required>
+            </div>
+
+            <button id="btn-calcular" type="submit">Calcular</button>
+        </form>
+
+        <p id="mensagem"></p>
+
+        <section class="historico">
+            <h2>Histórico desta sessão</h2>
+            <ul id="lista-historico"></ul>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
