@@ -1,0 +1,209 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Figtree", Arial, Helvetica, sans-serif;
+    color: #2a2438;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(167, 139, 250, 0.28), transparent 30%),
+        radial-gradient(circle at 88% 88%, rgba(244, 114, 182, 0.18), transparent 28%),
+        #efeaf8;
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+}
+
+.bloco {
+    width: 100%;
+    max-width: 640px;
+    padding: 36px;
+    background:
+        repeating-linear-gradient(
+            transparent,
+            transparent 31px,
+            rgba(167, 139, 250, 0.12) 32px
+        ),
+        #fffcff;
+    border: 1px solid #e4dcf3;
+    border-radius: 28px;
+    box-shadow: 0 22px 48px rgba(74, 47, 110, 0.1);
+}
+
+.marca {
+    margin: 0 0 10px;
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6d28d9;
+    background: #efe7ff;
+    border-radius: 999px;
+}
+
+h1 {
+    margin: 0 0 8px;
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 2.5rem;
+    color: #261b3d;
+}
+
+.subtitulo {
+    margin: 0 0 28px;
+    color: #6b6280;
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #43365c;
+}
+
+.linha {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #261b3d;
+    background: #f7f3ff;
+    border: 1px solid #d9cdef;
+    border-radius: 14px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+}
+
+#btn-salvar {
+    padding: 14px 20px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    color: white;
+    background: #6d28d9;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s, background 0.2s;
+}
+
+#btn-salvar:hover {
+    background: #5b21b6;
+    transform: translateY(-1px);
+}
+
+#btn-salvar.editando {
+    background: #c2410c;
+}
+
+#btn-salvar.editando:hover {
+    background: #9a3412;
+}
+
+#mensagem {
+    margin: 0;
+    font-weight: 700;
+}
+
+#mensagem:empty {
+    display: none;
+}
+
+#mensagem:not(:empty) {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    color: #6d28d9;
+    background: #efe7ff;
+    border-radius: 12px;
+}
+
+#mensagem.erro:not(:empty) {
+    color: #9f1239;
+    background: #ffe4e6;
+}
+
+#lista-tarefas {
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+#lista-tarefas:empty::after {
+    content: "Nenhuma tarefa ainda. Adicione a primeira.";
+    display: block;
+    padding: 18px;
+    color: #7c738f;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px dashed #d9cdef;
+    border-radius: 16px;
+}
+
+#lista-tarefas li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 16px 18px;
+    background: white;
+    border: 1px solid #eadff8;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(74, 47, 110, 0.05);
+}
+
+#lista-tarefas li span {
+    flex: 1;
+    font-size: 1.05rem;
+    color: #2a2438;
+}
+
+#lista-tarefas li button {
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#lista-tarefas li button.editar {
+    color: #6d28d9;
+    background: #efe7ff;
+}
+
+#lista-tarefas li button.excluir {
+    color: #be123c;
+    background: #ffe4e6;
+}
+
+#lista-tarefas li button:hover {
+    transform: scale(1.04);
+}
+
+@media (max-width: 640px) {
+    .bloco {
+        padding: 24px 18px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .linha {
+        flex-direction: column;
+    }
+}

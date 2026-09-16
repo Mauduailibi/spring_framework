@@ -25,7 +25,9 @@ spring_framework/
 ├── biblioteca/             ← exercícios da primeira parte, a partir da Aula 06
 ├── stocksales/             ← projeto da loja, segunda parte de cada aula
 ├── calculadora/            ← exercício: front pronto, API em Java
-└── imc/                    ← exercício: calculadora de IMC
+├── imc/                    ← exercício: calculadora de IMC
+├── atm/                    ← exercício: caixa eletrônico
+└── tarefas/                ← exercício: lista de tarefas
 ```
 
 ## Como rodar um projeto Spring Boot

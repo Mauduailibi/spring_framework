@@ -1,0 +1,219 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
+    color: #1f2933;
+    background:
+        linear-gradient(#8aa4b8 0 42%, #6d8496 42% 44%, #c5b39a 44% 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 28px 16px;
+}
+
+.caixa {
+    width: 100%;
+    max-width: 420px;
+    padding: 18px 20px 22px;
+    background: linear-gradient(180deg, #d8dee6 0%, #b7c0cc 55%, #9aa6b4 100%);
+    border: 3px solid #7d8794;
+    border-radius: 28px;
+    box-shadow:
+        0 28px 50px rgba(31, 41, 51, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.faixa-marca {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    color: #f4f7fb;
+    background: #1e4d7b;
+    border-radius: 12px;
+}
+
+.led {
+    width: 10px;
+    height: 10px;
+    background: #5dff8a;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #5dff8a;
+}
+
+.tela {
+    padding: 18px 18px 14px;
+    background: radial-gradient(circle at top, #16351f 0%, #07140c 100%);
+    border: 6px solid #4b5560;
+    border-radius: 8px;
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45);
+    min-height: 148px;
+}
+
+.tela-rotulo {
+    margin: 0 0 8px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #7dff9a;
+}
+
+.tela-saldo {
+    margin: 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #b6ffc6;
+    text-shadow: 0 0 12px rgba(91, 255, 138, 0.35);
+}
+
+.tela-msg {
+    margin: 16px 0 0;
+    min-height: 2.4em;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    color: #8fe8a4;
+}
+
+.tela.erro .tela-msg {
+    color: #ffb4a8;
+}
+
+.tela.erro .tela-saldo {
+    color: #ffd0c8;
+}
+
+.fenda {
+    margin: 14px auto 6px;
+    width: 72%;
+    height: 10px;
+    background: #1f2933;
+    border-radius: 4px;
+    box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.55);
+}
+
+.fenda span {
+    display: block;
+    width: 40%;
+    height: 3px;
+    margin: 3px auto 0;
+    background: #6ee7b7;
+}
+
+.fenda-legenda {
+    margin: 0 0 14px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #4b5563;
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #334155;
+}
+
+.entrada {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    background: #eef2f6;
+    border: 2px solid #8b96a3;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.entrada span {
+    padding: 0 0 0 14px;
+    font-weight: 800;
+    color: #475569;
+}
+
+.entrada input {
+    width: 100%;
+    padding: 14px 14px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 1.15rem;
+    color: #111827;
+    background: transparent;
+    border: none;
+    outline: none;
+    appearance: textfield;
+}
+
+.entrada input::-webkit-inner-spin-button,
+.entrada input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.entrada:focus-within {
+    border-color: #1e4d7b;
+    box-shadow: 0 0 0 3px rgba(30, 77, 123, 0.18);
+}
+
+.acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+button {
+    padding: 16px 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.15s, opacity 0.2s;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+    transform: none;
+}
+
+#btn-deposito {
+    background: #1f7a4d;
+    box-shadow: 0 6px 0 #145536;
+}
+
+#btn-saque {
+    background: #b45309;
+    box-shadow: 0 6px 0 #7c3a0a;
+}
+
+@media (max-width: 480px) {
+    .tela-saldo {
+        font-size: 1.9rem;
+    }
+
+    .acoes {
+        grid-template-columns: 1fr;
+    }
+}

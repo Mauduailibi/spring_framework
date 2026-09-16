@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de tarefas · Entra21</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+
+    <main class="bloco">
+        <header>
+            <p class="marca">Entra21 · Hoje</p>
+            <h1>Lista de tarefas</h1>
+            <p class="subtitulo">Anote, edite e apague. O Java guarda a lista.</p>
+        </header>
+
+        <form id="form-tarefa">
+            <label for="texto">Nova tarefa</label>
+            <div class="linha">
+                <input id="texto" name="texto" type="text" placeholder="Ex.: Estudar Spring" maxlength="80" required>
+                <button id="btn-salvar" type="submit">Adicionar</button>
+            </div>
+        </form>
+
+        <p id="mensagem"></p>
+
+        <ul id="lista-tarefas"></ul>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

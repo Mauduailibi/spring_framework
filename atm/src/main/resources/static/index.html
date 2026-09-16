@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caixa eletrônico · Entra21</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Barlow:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+
+    <div class="caixa">
+        <div class="faixa-marca">
+            <span>Banco Entra21</span>
+            <span class="led"></span>
+        </div>
+
+        <section class="tela" aria-live="polite">
+            <p class="tela-rotulo">Saldo disponível</p>
+            <p id="saldo" class="tela-saldo">R$ --</p>
+            <p id="mensagem" class="tela-msg">Insira o valor e escolha a operação</p>
+        </section>
+
+        <div class="fenda" aria-hidden="true">
+            <span></span>
+        </div>
+        <p class="fenda-legenda">Insira o cartão</p>
+
+        <form id="form-atm">
+            <label for="valor">Valor da operação</label>
+            <div class="entrada">
+                <span>R$</span>
+                <input id="valor" name="valor" type="number" step="0.01" min="0" placeholder="0,00" required>
+            </div>
+
+            <div class="acoes">
+                <button type="submit" name="operacao" value="deposito" id="btn-deposito">Depositar</button>
+                <button type="submit" name="operacao" value="saque" id="btn-saque">Sacar</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
