@@ -27,7 +27,8 @@ spring_framework/
 ├── calculadora/            ← exercício: front pronto, API em Java
 ├── imc/                    ← exercício: calculadora de IMC
 ├── atm/                    ← exercício: caixa eletrônico
-└── tarefas/                ← exercício: lista de tarefas
+├── tarefas/                ← exercício: lista de tarefas
+└── banco/                  ← Aula 08: Thymeleaf + MySQL (login, saldo, PIX, extrato)
 ```
 
 ## Como rodar um projeto Spring Boot
@@ -41,6 +42,17 @@ No terminal, dentro da pasta do projeto:
 (No macOS/Linux: `./mvnw spring-boot:run`)
 
 Depois abra no navegador: [http://localhost:8080](http://localhost:8080)
+
+## Banco de dados (a partir da Aula 08)
+
+O projeto `banco` usa MySQL. Usamos o **XAMPP**: [apachefriends.org](https://www.apachefriends.org)
+
+1. No XAMPP Control Panel, clique em **Start** no Apache e no MySQL
+2. Abra [http://localhost/phpmyadmin](http://localhost/phpmyadmin)
+3. Crie o banco `banco` (agrupamento `utf8mb4_general_ci`)
+4. Só depois suba o Spring
+
+Usuário `root`, sem senha (padrão do XAMPP).
 
 ## Compilar os slides
 

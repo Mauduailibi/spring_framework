@@ -1,0 +1,288 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Barlow:wght@500;600;700;800&display=swap");
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+    color: #1f2933;
+    background: linear-gradient(160deg, #0f2f52 0%, #1e4d7b 45%, #e8eef4 45%, #f4f7fb 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 48px 16px;
+}
+
+/* ---------- Cartão (a caixa branca de cada página) ---------- */
+
+.cartao {
+    width: 100%;
+    max-width: 420px;
+    padding: 28px 28px 24px;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 24px 48px rgba(15, 47, 82, 0.25);
+}
+
+.cartao-larga {
+    max-width: 920px;
+}
+
+.marca {
+    margin: 0 0 4px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #1e4d7b;
+}
+
+.titulo {
+    margin: 0 0 20px;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f2f52;
+}
+
+.subtitulo {
+    margin: 28px 0 12px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f2f52;
+}
+
+.topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.ola {
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+}
+
+/* ---------- Formulários ---------- */
+
+form label {
+    display: block;
+    margin: 12px 0 6px;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+form input {
+    width: 100%;
+    padding: 11px 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #1f2933;
+    background: #f4f7fb;
+    border: 2px solid #d5dde6;
+    border-radius: 10px;
+}
+
+form input:focus {
+    outline: none;
+    border-color: #1e4d7b;
+    background: #ffffff;
+}
+
+/* ---------- Botões e links ---------- */
+
+.botao {
+    display: block;
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: #1e4d7b;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.botao:hover {
+    background: #0f2f52;
+}
+
+.botao-secundario {
+    display: inline-block;
+    padding: 8px 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1e4d7b;
+    text-decoration: none;
+    border: 2px solid #1e4d7b;
+    border-radius: 10px;
+}
+
+.botao-secundario:hover {
+    color: #ffffff;
+    background: #1e4d7b;
+}
+
+.link {
+    display: block;
+    margin-top: 16px;
+    text-align: center;
+    font-weight: 600;
+    color: #1e4d7b;
+}
+
+/* ---------- Mensagens ---------- */
+
+.alerta-erro,
+.alerta-sucesso {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    font-weight: 600;
+    border-radius: 10px;
+}
+
+.alerta-erro {
+    color: #8a1c1c;
+    background: #fde8e8;
+    border-left: 5px solid #c53030;
+}
+
+.alerta-sucesso {
+    color: #1c5a32;
+    background: #e3f6e9;
+    border-left: 5px solid #2f855a;
+}
+
+/* ---------- Saldo ---------- */
+
+.saldo {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f2f52 0%, #1e4d7b 100%);
+    border-radius: 14px;
+}
+
+.saldo-rotulo {
+    margin: 0 0 6px;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.saldo-valor {
+    margin: 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+/* ---------- Operações (depósito, saque, PIX) ---------- */
+
+.operacoes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.operacao {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: #f4f7fb;
+    border: 1px solid #d5dde6;
+    border-radius: 14px;
+}
+
+.operacao h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #0f2f52;
+}
+
+.operacao input {
+    background: #ffffff;
+}
+
+.operacao .botao {
+    margin-top: auto;
+}
+
+.operacao input:last-of-type {
+    margin-bottom: 18px;
+}
+
+/* ---------- Extrato ---------- */
+
+.extrato {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.extrato th {
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #52606d;
+    border-bottom: 2px solid #d5dde6;
+}
+
+.extrato td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e4e9ef;
+}
+
+.extrato td:last-child,
+.extrato th:last-child {
+    text-align: right;
+}
+
+.entrada {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 700;
+    color: #2f855a;
+}
+
+.saida {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 700;
+    color: #c53030;
+}
+
+.vazio {
+    margin: 12px 0 0;
+    color: #7b8794;
+    text-align: center;
+}
+
+/* ---------- Celular ---------- */
+
+@media (max-width: 720px) {
+    body {
+        padding: 24px 12px;
+    }
+
+    .cartao {
+        padding: 22px 18px;
+    }
+
+    .operacoes {
+        grid-template-columns: 1fr;
+    }
+
+    .saldo-valor {
+        font-size: 1.8rem;
+    }
+}

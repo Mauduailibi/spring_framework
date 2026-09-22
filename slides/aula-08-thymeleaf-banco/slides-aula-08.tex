@@ -1,0 +1,2791 @@
+% =============================================================================
+% Aula 08 — Thymeleaf e banco de dados {\textperiodcentered} Projeto banco
+% Beamer + tema Madrid | Curso Entra21 — Spring Framework
+% Compilar: tectonic -X compile slides-aula-08.tex
+% =============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codeblue}{RGB}{30,70,160}
+\definecolor{codered}{RGB}{180,50,50}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codered},
+  tabsize=2,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+           {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+           {ê}{{\^e}}1 {Ê}{{\^E}}1 {â}{{\^a}}1 {Â}{{\^A}}1
+           {ô}{{\^o}}1 {Ô}{{\^O}}1
+           {à}{{\`a}}1 {À}{{\`A}}1
+}
+
+\lstdefinelanguage{props}{
+  comment=[l]{\#},
+  morestring=[b]"
+}
+
+\newcommand{\onde}[1]{%
+  \begin{block}{Onde estamos}
+    #1
+  \end{block}
+}
+
+\title{Aula 08 --- Spring Framework}
+\subtitle{Thymeleaf {\textperiodcentered} Banco de dados {\textperiodcentered} Projeto banco}
+\author{Mauricio Duailibi Neto}
+\institute{Turma Java Entra21}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Esta aula tem dois dias}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Dia 1 {\textperiodcentered} Parte 1 --- 18h30 às 20h}
+        O que é Thymeleaf\\
+        O que é banco de dados\\
+        Instalar o XAMPP
+      \end{block}
+      \begin{block}{Dia 1 {\textperiodcentered} Parte 2 --- 20h20 às 22h}
+        O projeto banco\\
+        Configurar o banco no Spring\\
+        Tela de cadastro gravando no MySQL
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Dia 2 {\textperiodcentered} Parte 3 --- 18h30 às 20h}
+        Login com CPF e senha\\
+        Página da conta com o saldo\\
+        Depósito e saque
+      \end{block}
+      \begin{block}{Dia 2 {\textperiodcentered} Parte 4 --- 20h20 às 22h}
+        PIX para outra conta\\
+        Extrato\\
+        Teste com pessoas do gerador
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Duas novidades}
+  Até a aula 07 a gente fazia sempre do mesmo jeito.\\
+  A partir de hoje, duas coisas mudam.
+
+  \vspace{0.6em}
+  \begin{description}
+    \item[Thymeleaf] O Java passa a montar a página HTML.\\
+      Sem Axios. Sem \texttt{app.js}.
+    \item[Banco de dados] Os dados deixam de ficar no \texttt{ArrayList}.\\
+      Vão para o MySQL e não somem quando o Spring para.
+  \end{description}
+
+  \vspace{0.6em}
+  O projeto que junta as duas coisas é um \textbf{banco}:\\
+  conta, saldo, depósito, saque e PIX.
+\end{frame}
+
+\begin{frame}{Antes de começar: baixem o XAMPP}
+  O download demora um pouco.\\
+  Deixem baixando enquanto a gente conversa.
+
+  \vspace{0.6em}
+  \begin{enumerate}
+    \item Abram \texttt{https://www.apachefriends.org}
+    \item Cliquem em \textbf{XAMPP para Windows}
+    \item Só baixem. \textbf{Não instalem ainda.}
+  \end{enumerate}
+
+  \vspace{0.6em}
+  Daqui a pouco a gente instala junto, passo a passo.
+\end{frame}
+
+\begin{frame}{Mapa da aula}
+  \begin{multicols}{2}
+    \small
+    \tableofcontents
+  \end{multicols}
+\end{frame}
+
+% #############################################################################
+\section{Como fazíamos até agora}
+
+\begin{frame}{Relembrando o ATM da aula 07}
+  No caixa eletrônico da aula passada:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \texttt{index.html} ficava na pasta \texttt{static}
+    \item \texttt{app.js} usava o Axios para chamar \texttt{/api/conta}
+    \item O Java respondia com JSON: \texttt{\{"saldo": 50\}}
+    \item O JavaScript pegava o número e colocava na tela
+  \end{itemize}
+
+  \vspace{0.5em}
+  O Java só mandava \textbf{dados}.\\
+  Quem montava a tela era o JavaScript, no navegador.
+\end{frame}
+
+\begin{frame}{O desenho de antes}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.8cm, minimum height=1.0cm,
+                  font=\small},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (nav) {Navegador\\\scriptsize HTML + JS};
+    \node[box, fill=green!20, right=4.5cm of nav] (java) {Spring\\\scriptsize \texttt{@RestController}};
+
+    \draw[seta] ([yshift=0.25cm]nav.east) -- node[above, font=\scriptsize]
+      {1. Axios: GET \texttt{/api/conta}} ([yshift=0.25cm]java.west);
+    \draw[seta] ([yshift=-0.25cm]java.west) -- node[below, font=\scriptsize]
+      {2. JSON: \texttt{\{"saldo": 50\}}} ([yshift=-0.25cm]nav.east);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.6em}
+  3. O JavaScript pega o 50 e escreve \texttt{R\$ 50,00} na tela.
+
+  \vspace{0.6em}
+  Isso se chama \textbf{API REST}.\\
+  Foi o que fizemos da aula 01 até a aula 07.
+\end{frame}
+
+\begin{frame}{O problema da memória}
+  Onde ficavam os alunos, os produtos, as vendas?
+
+  \vspace{0.5em}
+  Num \texttt{ArrayList}, dentro da classe \texttt{Dados}.
+
+  \vspace{0.5em}
+  \begin{alertblock}{O que acontece quando o Spring para}
+    Tudo some.\\
+    Cadastrou dez produtos, parou o Spring, subiu de novo:\\
+    a lista volta vazia.
+  \end{alertblock}
+
+  \vspace{0.5em}
+  Num banco de verdade isso não pode acontecer.\\
+  Ninguém aceita perder o saldo porque o servidor reiniciou.
+\end{frame}
+
+% #############################################################################
+\section{O que é Thymeleaf}
+
+\begin{frame}{Uma comparação com restaurante}
+  \begin{block}{Antes (API REST)}
+    A cozinha manda os ingredientes separados para a mesa:\\
+    o arroz, o feijão, a carne.\\
+    Quem monta o prato é o cliente (o JavaScript).
+  \end{block}
+
+  \vspace{0.5em}
+  \begin{block}{Agora (Thymeleaf)}
+    A cozinha já manda o \textbf{prato montado}.\\
+    O cliente só come.
+  \end{block}
+
+  \vspace{0.5em}
+  O ``prato montado'' é a página HTML com os dados já dentro.
+\end{frame}
+
+\begin{frame}{O que é o Thymeleaf}
+  É uma ferramenta que o Spring usa para montar páginas HTML.
+
+  \vspace{0.6em}
+  A gente escreve um HTML normal,\\
+  com alguns espaços marcados para o Java preencher.
+
+  \vspace{0.6em}
+  Antes de mandar a página para o navegador,\\
+  o Thymeleaf troca esses espaços pelos dados de verdade.
+
+  \vspace{0.6em}
+  \begin{block}{Em uma frase}
+    O servidor devolve a página pronta, já com o nome e o saldo.
+  \end{block}
+\end{frame}
+
+\begin{frame}{O desenho de agora}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.6cm, minimum height=1.0cm,
+                  font=\small},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (nav) {Navegador\\\scriptsize só HTML};
+    \node[box, fill=green!20, right=3.6cm of nav] (java) {Spring\\\scriptsize \texttt{@Controller}};
+    \node[box, fill=yellow!25, right=1.6cm of java] (tpl) {Thymeleaf\\\scriptsize \texttt{conta.html}};
+
+    \draw[seta] ([yshift=0.25cm]nav.east) -- node[above, font=\scriptsize]
+      {1. GET \texttt{/conta}} ([yshift=0.25cm]java.west);
+    \draw[seta] ([yshift=0.25cm]java.east) -- node[above, font=\scriptsize]
+      {2. dados} ([yshift=0.25cm]tpl.west);
+    \draw[seta] ([yshift=-0.25cm]tpl.west) -- node[below, font=\scriptsize]
+      {3. HTML} ([yshift=-0.25cm]java.east);
+    \draw[seta] ([yshift=-0.25cm]java.west) -- node[below, font=\scriptsize]
+      {4. página pronta} ([yshift=-0.25cm]nav.east);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.6em}
+  O navegador recebe \texttt{<p>R\$ 50,00</p>} já escrito.\\
+  Não tem Axios. Não tem JavaScript para montar a tela.
+\end{frame}
+
+\begin{frame}[fragile]{Um exemplo pequeno}
+  No arquivo HTML a gente escreve:
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<p th:text="${nome}">aqui vai o nome</p>
+\end{lstlisting}
+
+  No Java a gente diz qual é o nome:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+model.addAttribute("nome", "Ana");
+\end{lstlisting}
+
+  O navegador recebe:
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<p>Ana</p>
+\end{lstlisting}
+
+  O \texttt{th:text} trocou o texto de dentro pelo valor do Java.
+\end{frame}
+
+\begin{frame}{Antes e agora, lado a lado}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+     & Antes (REST) & Agora (Thymeleaf) \\
+    \midrule
+    Anotação & \texttt{@RestController} & \texttt{@Controller} \\
+    O Java devolve & dados (JSON) & o nome da página \\
+    Quem monta a tela & JavaScript & o servidor \\
+    Como o form envia & Axios & o próprio \texttt{<form>} \\
+    Pasta do HTML & \texttt{static/} & \texttt{templates/} \\
+    Arquivo \texttt{app.js} & sim & não precisa \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  A pasta \texttt{static/} continua existindo.\\
+  Ela guarda o CSS e as imagens.
+\end{frame}
+
+\begin{frame}[fragile]{A diferença no Controller}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Antes}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@RestController
+public class ContaController {
+
+  @GetMapping("/api/conta")
+  public Conta ver() {
+    return conta;
+  }
+}
+\end{lstlisting}
+      Devolve o objeto.\\
+      Vira JSON.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Agora}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@Controller
+public class ContaController {
+
+  @GetMapping("/conta")
+  public String ver(Model model) {
+    model.addAttribute("conta", conta);
+    return "conta";
+  }
+}
+\end{lstlisting}
+      Devolve o texto \texttt{"conta"}.\\
+      O Spring abre \texttt{templates/conta.html}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Qual dos dois é melhor?}
+  Nenhum. São usados em situações diferentes.
+
+  \vspace{0.6em}
+  \begin{description}
+    \item[REST] Quando a tela é separada do servidor:\\
+      aplicativo de celular, site feito em React, outro sistema.
+    \item[Thymeleaf] Quando o site inteiro fica num projeto só.\\
+      Muito sistema interno de empresa é assim.
+  \end{description}
+
+  \vspace{0.6em}
+  Os dois são Spring.\\
+  Quem sabe os dois consegue trabalhar em qualquer um.
+\end{frame}
+
+% #############################################################################
+\section{A sintaxe do Thymeleaf}
+
+\begin{frame}[fragile]{A primeira linha muda}
+  Todo arquivo que usa Thymeleaf começa assim:
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O \texttt{xmlns:th} avisa: ``neste arquivo existem comandos \texttt{th:}''.
+
+  \vspace{0.5em}
+  Sem essa linha a página até funciona,\\
+  mas o VS Code sublinha tudo que começa com \texttt{th:}.
+\end{frame}
+
+\begin{frame}[fragile]{O Model é uma bandeja}
+  O Controller coloca os dados numa bandeja.\\
+  A página pega os dados da bandeja.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/conta")
+public String ver(Model model) {
+  model.addAttribute("nome", "Ana");
+  model.addAttribute("saldo", 250.0);
+  return "conta";
+}
+\end{lstlisting}
+
+  \texttt{"nome"} é a etiqueta.\\
+  \texttt{"Ana"} é o que está dentro.\\
+  Na página, a gente chama pela etiqueta: \texttt{\$\{nome\}}.
+\end{frame}
+
+\begin{frame}[fragile]{th:text --- escrever um valor}
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<p th:text="${nome}">Nome</p>
+<p th:text="'Saldo: R$ ' + ${saldo}">R$ 0</p>
+\end{lstlisting}
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item \texttt{\$\{...\}} busca no Model
+    \item O texto entre as tags (\texttt{Nome}) é trocado
+    \item Texto fixo vai entre aspas simples: \texttt{'Saldo: R\$ '}
+    \item O \texttt{+} junta os pedaços, igual no Java
+  \end{itemize}
+
+  \vspace{0.4em}
+  Se o objeto tiver atributos, a gente usa o ponto:\\
+  \texttt{\$\{conta.nome\}} chama o \texttt{getNome()} da conta.
+\end{frame}
+
+\begin{frame}[fragile]{th:if --- mostrar só às vezes}
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<p class="alerta-erro" th:if="${erro}" th:text="${erro}"></p>
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Se existir um \texttt{erro} no Model, o parágrafo aparece.\\
+  Se não existir, o parágrafo nem vai para o navegador.
+
+  \vspace{0.5em}
+  É o \texttt{if} do Java, dentro do HTML.
+
+  \vspace{0.5em}
+  Vamos usar para as mensagens:\\
+  ``Saldo insuficiente'', ``CPF ou senha incorretos''.
+\end{frame}
+
+\begin{frame}[fragile]{th:each --- repetir para cada item}
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<ul>
+  <li th:each="nome : ${nomes}" th:text="${nome}"></li>
+</ul>
+\end{lstlisting}
+
+  Se \texttt{nomes} for uma lista com Ana, Bruno e Carla, sai:
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<ul>
+  <li>Ana</li>
+  <li>Bruno</li>
+  <li>Carla</li>
+</ul>
+\end{lstlisting}
+
+  É o \texttt{for} do Java.\\
+  Vamos usar no extrato: uma linha para cada movimentação.
+\end{frame}
+
+\begin{frame}[fragile]{th:action e th:href --- os endereços}
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<form th:action="@{/deposito}" method="post">
+<a th:href="@{/sair}">Sair</a>
+\end{lstlisting}
+
+  \vspace{0.4em}
+  \texttt{\$\{...\}} é para \textbf{dados}.\\
+  \texttt{@\{...\}} é para \textbf{endereços}.
+
+  \vspace{0.5em}
+  O \texttt{th:action} diz para onde o formulário vai.\\
+  O \texttt{th:href} diz para onde o link vai.
+
+  \vspace{0.5em}
+  Funcionaria com \texttt{action} e \texttt{href} comuns também.\\
+  Usamos a versão \texttt{th:} porque é o jeito do Thymeleaf.
+\end{frame}
+
+\begin{frame}[fragile]{O formulário volta a trabalhar sozinho}
+  Sem Axios, quem envia é o próprio \texttt{<form>}.
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<form th:action="@{/deposito}" method="post">
+  <input type="number" name="valor">
+  <button type="submit">Depositar</button>
+</form>
+\end{lstlisting}
+
+  No Java, o \texttt{name} do input vira o parâmetro:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@PostMapping("/deposito")
+public String depositar(@RequestParam double valor) {
+\end{lstlisting}
+
+  \texttt{name="valor"} no HTML, \texttt{valor} no Java.\\
+  Se os nomes forem diferentes, dá erro.
+\end{frame}
+
+\begin{frame}[fragile]{redirect --- mandar o navegador para outro lugar}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+return "conta";            // mostra templates/conta.html
+return "redirect:/conta";  // manda o navegador abrir /conta
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Depois de um POST, a gente sempre usa \texttt{redirect}.
+
+  \vspace{0.4em}
+  \begin{block}{Por quê?}
+    Sem o redirect, se a pessoa apertar F5 depois de depositar,\\
+    o navegador manda o depósito de novo.\\
+    Com o redirect, o F5 só recarrega a página da conta.
+  \end{block}
+\end{frame}
+
+\begin{frame}{O navegador nunca vê o th:}
+  Cliquem com o botão direito na página e em \textbf{Exibir código-fonte}.
+
+  \vspace{0.6em}
+  Não aparece \texttt{th:text}, nem \texttt{\$\{conta.nome\}}.\\
+  Aparece o HTML pronto, com o nome escrito.
+
+  \vspace{0.6em}
+  Todo o trabalho do Thymeleaf acontece no servidor,\\
+  antes da página sair.
+\end{frame}
+
+\begin{frame}{Resumo da sintaxe}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Comando & Para que serve & Parecido com \\
+    \midrule
+    \texttt{th:text} & escrever um valor & \texttt{System.out.println} \\
+    \texttt{th:if} & mostrar só se for verdade & \texttt{if} \\
+    \texttt{th:each} & repetir para cada item & \texttt{for} \\
+    \texttt{th:action} & para onde o form vai & URL do Axios \\
+    \texttt{th:href} & para onde o link vai & \texttt{href} \\
+    \texttt{\$\{...\}} & pegar dado do Model & variável \\
+    \texttt{@\{...\}} & montar um endereço & \texttt{"/api/..."} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  É só isso que vamos usar nessa aula.
+\end{frame}
+
+% #############################################################################
+\section{Banco de dados}
+
+\begin{frame}{O que é um banco de dados}
+  Um programa que guarda informação no disco, de forma organizada.
+
+  \vspace{0.5em}
+  Pensem numa planilha do Excel:
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Excel & Banco de dados \\
+    \midrule
+    O arquivo & o \textbf{banco} \\
+    Cada aba & uma \textbf{tabela} \\
+    Cada coluna & uma \textbf{coluna} (nome, cpf, saldo) \\
+    Cada linha & um \textbf{registro} (uma pessoa) \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  Desligou o computador? Os dados continuam lá.
+\end{frame}
+
+\begin{frame}{Uma tabela de verdade}
+  A tabela \texttt{conta}, que vamos criar hoje:
+
+  \vspace{0.5em}
+  \begin{center}
+  \begin{tabular}{lllll}
+    \toprule
+    id & nome & cpf & senha & saldo \\
+    \midrule
+    1 & Ana Souza & 11111111111 & 123 & 250.25 \\
+    2 & Bruno Lima & 22222222222 & 456 & 150.25 \\
+    3 & Carla Dias & 33333333333 & 789 & 0.00 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  Cada linha é uma conta.\\
+  É igual ao \texttt{ArrayList<Conta>}, só que guardado no disco.
+\end{frame}
+
+\begin{frame}{A chave primária}
+  A coluna \texttt{id} é especial.
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Nunca se repete
+    \item Nunca fica vazia
+    \item O próprio banco escolhe o número: 1, 2, 3\ldots
+  \end{itemize}
+
+  \vspace{0.5em}
+  Ela se chama \textbf{chave primária}.
+
+  \vspace{0.5em}
+  Lembram do \texttt{Dados.proximoId = Dados.proximoId + 1}?\\
+  O banco faz isso sozinho.
+\end{frame}
+
+\begin{frame}{MySQL e SQL}
+  \begin{description}
+    \item[MySQL] Um dos bancos de dados mais usados no mundo.\\
+      É gratuito.
+    \item[SQL] A língua que se usa para falar com o banco.\\
+      Serve para o MySQL e para quase todos os outros.
+  \end{description}
+
+  \vspace{0.6em}
+  O SQL tem quatro comandos principais.\\
+  Vocês já conhecem a ideia.
+\end{frame}
+
+\begin{frame}{Os quatro comandos}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    SQL & O que faz & Parecido com \\
+    \midrule
+    \texttt{SELECT} & ler & GET \\
+    \texttt{INSERT} & criar & POST \\
+    \texttt{UPDATE} & alterar & PUT \\
+    \texttt{DELETE} & apagar & DELETE \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  É o mesmo CRUD das aulas 03 e 04.\\
+  Só que agora falando direto com o banco.
+\end{frame}
+
+\begin{frame}[fragile]{Como o SQL se parece}
+\begin{lstlisting}[language=SQL,basicstyle=\ttfamily\footnotesize]
+SELECT * FROM conta;
+
+SELECT nome, saldo FROM conta WHERE cpf = '11111111111';
+
+INSERT INTO conta (nome, cpf, senha, saldo)
+VALUES ('Ana Souza', '11111111111', '123', 0);
+
+UPDATE conta SET saldo = 500 WHERE id = 1;
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Dá para ler quase como português:\\
+  ``selecione nome e saldo da conta onde o cpf é\ldots''
+\end{frame}
+
+\begin{frame}{Vamos precisar escrever SQL?}
+  Quase nada.
+
+  \vspace{0.6em}
+  O Spring escreve o SQL por nós.\\
+  A gente chama um método Java e ele monta o comando.
+
+  \vspace{0.6em}
+  Vamos usar o SQL só para \textbf{olhar} o banco:\\
+  conferir se a conta foi gravada, se o saldo mudou.
+
+  \vspace{0.6em}
+  Para isso existe o phpMyAdmin.
+\end{frame}
+
+% #############################################################################
+\section{XAMPP e phpMyAdmin}
+
+\begin{frame}{O que é o XAMPP}
+  Um instalador que traz várias ferramentas juntas.
+
+  \vspace{0.5em}
+  Das que vêm nele, vamos usar três:
+
+  \vspace{0.4em}
+  \begin{description}
+    \item[MySQL] O banco de dados.\\
+      {\small (O XAMPP traz o MariaDB, que é o MySQL com outro nome.)}
+    \item[phpMyAdmin] Uma página para ver e mexer no banco pelo navegador.
+    \item[Apache] Só serve para abrir o phpMyAdmin.
+  \end{description}
+
+  \vspace{0.5em}
+  O nosso Spring \textbf{não} usa o Apache.\\
+  O Spring conversa direto com o MySQL.
+\end{frame}
+
+\begin{frame}{Passo 1 --- Instalar o XAMPP}
+  \begin{enumerate}
+    \item Abram o arquivo que baixaram
+    \item Se o Windows perguntar se permite alterações: \textbf{Sim}
+    \item Se aparecer um aviso sobre antivírus ou UAC: \textbf{OK}
+    \item Nos componentes, deixem como está e cliquem em \textbf{Next}
+    \item Pasta: deixem \texttt{C:\textbackslash xampp}
+    \item \textbf{Next} até terminar
+  \end{enumerate}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Firewall}
+    Se o Windows perguntar sobre o firewall, cliquem em \textbf{Permitir}.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Passo 2 --- Ligar o MySQL}
+  Abram o \textbf{XAMPP Control Panel}.
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Na linha \textbf{Apache}, cliquem em \textbf{Start}
+    \item Na linha \textbf{MySQL}, cliquem em \textbf{Start}
+    \item Os dois nomes ficam com fundo verde
+    \item Na linha do MySQL aparece a porta \texttt{3306}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  \begin{block}{Todo dia de aula}
+    O MySQL precisa estar ligado \textbf{antes} de subir o Spring.\\
+    Sem ele, o Spring não consegue iniciar.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Passo 3 --- Abrir o phpMyAdmin}
+  No navegador:
+
+  \vspace{0.4em}
+  \begin{center}
+    \large\texttt{http://localhost/phpmyadmin}
+  \end{center}
+
+  \vspace{0.5em}
+  Do lado esquerdo aparece a lista de bancos que já existem.\\
+  Alguns vêm com o XAMPP: \texttt{mysql}, \texttt{phpmyadmin}, \texttt{test}.
+
+  \vspace{0.5em}
+  Não mexam neles.\\
+  Vamos criar o nosso.
+\end{frame}
+
+\begin{frame}{Passo 4 --- Criar o banco}
+  \begin{enumerate}
+    \item No lado esquerdo, cliquem em \textbf{Novo} (ou \textbf{New})
+    \item Nome do banco: \texttt{banco}
+    \item Ao lado, escolham \texttt{utf8mb4\_general\_ci}
+    \item Cliquem em \textbf{Criar} (ou \textbf{Create})
+  \end{enumerate}
+
+  \vspace{0.5em}
+  O banco \texttt{banco} aparece na lista da esquerda.\\
+  Ainda sem nenhuma tabela.
+
+  \vspace{0.5em}
+  O \texttt{utf8mb4} deixa gravar acento e cedilha sem virar símbolo estranho.
+\end{frame}
+
+\begin{frame}[fragile]{Outro jeito: pela aba SQL}
+  Quem preferir, pode criar escrevendo o comando.
+
+  \vspace{0.4em}
+  Cliquem na aba \textbf{SQL}, colem e cliquem em \textbf{Executar}:
+
+\begin{lstlisting}[language=SQL,basicstyle=\ttfamily\footnotesize]
+CREATE DATABASE banco
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O resultado é o mesmo do passo 4.\\
+  Não precisa fazer os dois.
+\end{frame}
+
+\begin{frame}{Usuário e senha do banco}
+  O MySQL do XAMPP vem com:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item usuário: \texttt{root}
+    \item senha: nenhuma, em branco
+  \end{itemize}
+
+  \vspace{0.5em}
+  Isso só serve no nosso computador, para estudar.\\
+  Um banco de verdade, na internet, sempre tem senha forte.
+
+  \vspace{0.5em}
+  Vamos colocar esse usuário na configuração do Spring daqui a pouco.
+\end{frame}
+
+\begin{frame}{Se o XAMPP não ligar}
+  \begin{itemize}
+    \item MySQL não fica verde --- outro MySQL já está instalado
+          no computador usando a porta 3306. Chamem o professor.
+    \item Apache não fica verde --- a porta 80 está ocupada
+          (Skype, IIS). O phpMyAdmin não abre, mas o Spring funciona.
+    \item \texttt{MySQL shutdown unexpectedly} --- chamem o professor.
+    \item phpMyAdmin não abre --- confiram se o Apache está verde.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Checkpoint}
+  \begin{itemize}
+    \item [ ] XAMPP instalado
+    \item [ ] Apache e MySQL verdes no painel
+    \item [ ] \texttt{http://localhost/phpmyadmin} abre
+    \item [ ] O banco \texttt{banco} aparece na lista da esquerda
+  \end{itemize}
+
+  \vspace{0.6em}
+  Todo mundo com os quatro itens?\\
+  Então vamos ver como o Java fala com esse banco.
+\end{frame}
+
+% #############################################################################
+\section{JPA: o Java fala com o banco}
+
+\begin{frame}{Duas línguas diferentes}
+  O Java pensa em \textbf{objetos}: uma \texttt{Conta} com nome e saldo.
+
+  \vspace{0.4em}
+  O banco pensa em \textbf{tabelas}: linhas e colunas.
+
+  \vspace{0.6em}
+  Alguém precisa traduzir.\\
+  Esse tradutor se chama \textbf{JPA}.
+
+  \vspace{0.6em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Java & Banco \\
+    \midrule
+    classe \texttt{Conta} & tabela \texttt{conta} \\
+    atributo \texttt{saldo} & coluna \texttt{saldo} \\
+    um objeto \texttt{Conta} & uma linha da tabela \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Quem conversa com quem}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.4cm, minimum height=1.0cm,
+                  font=\small},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (nav) {Navegador};
+    \node[box, fill=green!20, right=1.2cm of nav] (ctl) {Controller};
+    \node[box, fill=yellow!25, right=1.2cm of ctl] (rep) {Repository};
+    \node[box, fill=orange!25, right=1.2cm of rep] (db) {MySQL};
+
+    \draw[seta] (nav) -- (ctl);
+    \draw[seta] (ctl) -- (rep);
+    \draw[seta] (rep) -- (db);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.6em}
+  \begin{itemize}
+    \item O \textbf{Controller} recebe o pedido da tela
+    \item O \textbf{Repository} é quem fala com o banco
+    \item O Controller nunca escreve SQL. Ele pede para o Repository.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Anotações na classe}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@Entity
+public class Conta {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @Column(unique = true)
+  private String cpf;
+\end{lstlisting}
+
+  \begin{itemize}
+    \item \texttt{@Entity} --- esta classe vira uma tabela
+    \item \texttt{@Id} --- este atributo é a chave primária
+    \item \texttt{@GeneratedValue} --- o banco escolhe o número
+    \item \texttt{@Column(unique = true)} --- não pode repetir
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Por que Long e não int?}
+  Até agora o id era \texttt{int}.\\
+  Com banco de dados a gente usa \texttt{Long}.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \texttt{Long} é um número inteiro, que cabe valores bem grandes
+    \item Com L maiúsculo ele pode ficar \textbf{vazio} (\texttt{null})
+    \item Antes de salvar, a conta ainda não tem id: fica \texttt{null}
+    \item Depois de salvar, o banco preenche: 1, 2, 3\ldots
+  \end{itemize}
+
+  \vspace{0.5em}
+  É o costume em todo projeto Spring com banco.
+\end{frame}
+
+\begin{frame}[fragile]{O Repository}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public interface ContaRepository
+    extends JpaRepository<Conta, Long> {
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  É uma \textbf{interface}, não uma classe.\\
+  A gente não escreve o código dos métodos.
+
+  \vspace{0.4em}
+  O Spring lê \texttt{<Conta, Long>} e entende:\\
+  ``é um repositório de \texttt{Conta}, e o id é \texttt{Long}''.
+
+  \vspace{0.4em}
+  Ao subir, o Spring cria sozinho a classe que faz o trabalho.
+\end{frame}
+
+\begin{frame}{Métodos que já vêm prontos}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Antes, com \texttt{Dados} & Agora, com o Repository \\
+    \midrule
+    \texttt{Dados.contas.add(conta)} & \texttt{contaRepository.save(conta)} \\
+    \texttt{Dados.contas} & \texttt{contaRepository.findAll()} \\
+    \texttt{for} procurando o id & \texttt{contaRepository.findById(id)} \\
+    \texttt{Dados.contas.remove(...)} & \texttt{contaRepository.deleteById(id)} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  O \texttt{save} serve para os dois casos:\\
+  se a conta é nova, faz \texttt{INSERT}.\\
+  Se já existe, faz \texttt{UPDATE}.
+\end{frame}
+
+\begin{frame}[fragile]{Um método que a gente inventa}
+  Para o login, precisamos achar a conta pelo CPF.
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+Conta findByCpf(String cpf);
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Só escrevemos essa linha, sem corpo.\\
+  O Spring lê o \textbf{nome} do método:
+
+  \vspace{0.3em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Pedaço & Significa \\
+    \midrule
+    \texttt{find} & buscar \\
+    \texttt{By} & onde \\
+    \texttt{Cpf} & o atributo \texttt{cpf} é igual ao que eu passar \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3em}
+  E monta: \texttt{SELECT * FROM conta WHERE cpf = ?}\\
+  Se não achar, devolve \texttt{null}.
+\end{frame}
+
+\begin{frame}[fragile]{@Autowired --- pedir um pronto}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@Controller
+public class AcessoController {
+
+  @Autowired
+  private ContaRepository contaRepository;
+\end{lstlisting}
+
+  \vspace{0.4em}
+  A gente não faz \texttt{new ContaRepository()}.\\
+  Nem daria: é uma interface.
+
+  \vspace{0.4em}
+  O \texttt{@Autowired} diz ao Spring:\\
+  ``me entrega aquele repositório que você criou''.
+\end{frame}
+
+\begin{frame}{E a tabela, quem cria?}
+  Também o Spring.
+
+  \vspace{0.5em}
+  Na configuração vamos colocar:\\
+  \texttt{spring.jpa.hibernate.ddl-auto=update}
+
+  \vspace{0.5em}
+  Quando o Spring sobe, ele olha as classes com \texttt{@Entity}:
+  \begin{itemize}
+    \item Se a tabela não existe, ele cria
+    \item Se faltar uma coluna, ele acrescenta
+    \item Os dados que já estão lá, ele não apaga
+  \end{itemize}
+
+  \vspace{0.5em}
+  A gente só cria o \textbf{banco} no phpMyAdmin.\\
+  As \textbf{tabelas} ficam por conta do Spring.
+\end{frame}
+
+\begin{frame}{Resumo da teoria}
+  \begin{enumerate}
+    \item Thymeleaf: o servidor devolve a página pronta
+    \item \texttt{@Controller} devolve o nome do HTML, que fica em \texttt{templates/}
+    \item O Model leva os dados para a página
+    \item Banco de dados guarda no disco. Nada some ao reiniciar.
+    \item \texttt{@Entity} vira tabela, o Repository fala com o banco
+    \item O XAMPP liga o MySQL. O phpMyAdmin mostra o que tem dentro.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Intervalo}
+  \begin{center}
+    \Large Retomamos às \textbf{20h20}\\[0.8em]
+    \normalsize
+    Deixem o XAMPP aberto, com o MySQL ligado.\\
+    Na volta a gente abre o projeto \textbf{banco}.
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{O projeto banco}
+
+\begin{frame}{O que vamos construir}
+  O \textbf{Banco Entra21}. Nele, a pessoa pode:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Abrir uma conta com nome, CPF e senha
+    \item Entrar com CPF e senha
+    \item Ver o próprio saldo
+    \item Depositar
+    \item Sacar, se tiver saldo
+    \item Mandar um PIX para outra conta, usando o CPF
+    \item Ver o extrato de tudo que aconteceu
+  \end{enumerate}
+
+  \vspace{0.5em}
+  É o ATM da aula 07, só que com várias contas\\
+  e com o dinheiro guardado no banco de dados.
+\end{frame}
+
+\begin{frame}{As três telas}
+  \begin{center}
+  \begin{tikzpicture}[
+      tela/.style={draw, rounded corners, align=left, fill=white,
+                   minimum width=3.6cm, minimum height=3.0cm,
+                   font=\scriptsize, anchor=north},
+      titulo/.style={font=\small\bfseries},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[titulo] (t1) at (0,0) {cadastro.html};
+    \node[tela, below=0.1cm of t1] (c) {%
+      Abrir conta\\[0.3em]
+      Nome \hfill \fbox{\phantom{xxxxxx}}\\
+      CPF \hfill \fbox{\phantom{xxxxxx}}\\
+      Senha \hfill \fbox{\phantom{xxxxxx}}\\[0.3em]
+      \colorbox{blue!20}{Cadastrar}\\[0.2em]
+      \underline{Já tenho conta}};
+
+    \node[titulo] (t2) at (4.8,0) {login.html};
+    \node[tela, below=0.1cm of t2] (l) {%
+      Entrar\\[0.3em]
+      CPF \hfill \fbox{\phantom{xxxxxx}}\\
+      Senha \hfill \fbox{\phantom{xxxxxx}}\\[0.3em]
+      \colorbox{blue!20}{Entrar}\\[0.2em]
+      \underline{Abrir uma conta}};
+
+    \node[titulo] (t3) at (9.6,0) {conta.html};
+    \node[tela, below=0.1cm of t3] (k) {%
+      Olá, Ana \hfill \underline{Sair}\\[0.2em]
+      \colorbox{blue!20}{Saldo R\$ 250,25}\\[0.2em]
+      Depósito {\textperiodcentered} Saque {\textperiodcentered} PIX\\[0.2em]
+      Extrato\\
+      \quad Depósito \hfill 500,50\\
+      \quad Saque \hfill -100,00};
+
+    \draw[seta] (c.east) -- (l.west);
+    \draw[seta] (l.east) -- (k.west);
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{O caminho de quem usa}
+  \begin{enumerate}
+    \item Abre \texttt{/cadastro}, preenche e clica em Cadastrar
+    \item O Java grava a conta no banco, com saldo zero
+    \item Vai para \texttt{/login}, digita CPF e senha
+    \item O Java confere no banco e guarda quem entrou
+    \item Vai para \texttt{/conta}: nome, saldo e as operações
+    \item Cada operação é um formulário que volta para \texttt{/conta}
+    \item \texttt{/sair} esquece quem estava logado
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Todos os endereços}
+  \begin{center}
+  \small
+  \begin{tabular}{lll}
+    \toprule
+    Verbo e endereço & O que manda & O que acontece \\
+    \midrule
+    GET \texttt{/cadastro} & --- & mostra a tela de cadastro \\
+    POST \texttt{/cadastro} & nome, cpf, senha & grava a conta \\
+    GET \texttt{/login} & --- & mostra a tela de login \\
+    POST \texttt{/login} & cpf, senha & confere e entra \\
+    GET \texttt{/conta} & --- & mostra saldo e extrato \\
+    POST \texttt{/deposito} & valor & soma no saldo \\
+    POST \texttt{/saque} & valor & tira do saldo \\
+    POST \texttt{/pix} & cpfDestino, valor & passa para outra conta \\
+    GET \texttt{/sair} & --- & sai da conta \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3em}
+  Nenhum endereço começa com \texttt{/api}.\\
+  Todos devolvem página, não JSON.
+\end{frame}
+
+\begin{frame}{As duas tabelas}
+  \begin{columns}[T]
+    \begin{column}{0.4\textwidth}
+      \textbf{conta}
+      \begin{itemize}
+        \item id
+        \item nome
+        \item cpf
+        \item senha
+        \item saldo
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.55\textwidth}
+      \textbf{movimentacao}
+      \begin{itemize}
+        \item id
+        \item descricao --- ``Depósito'', ``PIX enviado para Bruno''
+        \item valor --- negativo quando sai dinheiro
+        \item data\_hora
+        \item conta\_id --- de quem é
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.6em}
+  Uma conta tem várias movimentações.\\
+  É o 1{:}N da aula 05: o \texttt{conta\_id} faz o papel do \texttt{categoriaId}.
+\end{frame}
+
+\begin{frame}{Sessão: o crachá}
+  Depois do login, como o Spring sabe quem está usando?
+
+  \vspace{0.5em}
+  Pensem num prédio com portaria:
+  \begin{itemize}
+    \item Na portaria, você mostra o documento (\textbf{login})
+    \item Recebe um crachá (\textbf{sessão})
+    \item Em cada andar, o segurança olha o crachá (\textbf{/conta})
+    \item Na saída, devolve o crachá (\textbf{/sair})
+  \end{itemize}
+
+  \vspace{0.5em}
+  No Java o crachá é o \texttt{HttpSession}.\\
+  Nele guardamos o id da conta que entrou.
+\end{frame}
+
+\begin{frame}{As classes do projeto}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Pasta & Arquivo & Para que serve \\
+    \midrule
+    \texttt{model} & \texttt{Conta} & a tabela conta \\
+    \texttt{model} & \texttt{Movimentacao} & a tabela movimentacao \\
+    \texttt{repository} & \texttt{ContaRepository} & fala com a tabela conta \\
+    \texttt{repository} & \texttt{MovimentacaoRepository} & fala com a movimentacao \\
+    \texttt{controller} & \texttt{AcessoController} & cadastro, login, sair \\
+    \texttt{controller} & \texttt{ContaController} & saldo e operações \\
+    \texttt{templates} & 3 arquivos \texttt{.html} & as três telas \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  O CSS já está pronto. O resto a gente escreve junto.
+\end{frame}
+
+\begin{frame}{O que fica para cada dia}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Quando & O que fica pronto \\
+    \midrule
+    Hoje, depois do intervalo & configuração, \texttt{Conta}, cadastro \\
+    Amanhã, primeira parte & login, página da conta, depósito, saque \\
+    Amanhã, segunda parte & PIX, \texttt{Movimentacao}, extrato \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  Ao fim de hoje, cada cadastro já aparece no phpMyAdmin.
+\end{frame}
+
+% #############################################################################
+\section{Configurando o projeto}
+
+\begin{frame}{Passo 1 --- Abrir o projeto}
+  \onde{Projeto \textbf{banco}}
+
+  \begin{enumerate}
+    \item Atualizem o repositório (\texttt{git pull})
+    \item No VS Code: \textbf{File > Open Folder}
+    \item Escolham a pasta \texttt{banco}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  O projeto foi gerado no \texttt{start.spring.io} com:
+  \begin{itemize}
+    \item Spring Web
+    \item Thymeleaf
+    \item Spring Data JPA
+    \item MySQL Driver
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{O que já veio pronto}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+banco/
+  pom.xml
+  src/main/java/com/entra21/banco/
+    BancoApplication.java
+  src/main/resources/
+    application.properties
+    static/css/estilo.css
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Só isso. Nenhum Controller, nenhum HTML.
+
+  \vspace{0.4em}
+  \begin{alertblock}{Não subam o Spring ainda}
+    Com o JPA no projeto, o Spring quer um banco configurado.\\
+    Se subir agora, dá erro. Primeiro o passo 2.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Onde cada arquivo vai ficar}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+banco/
+  src/main/java/com/entra21/banco/
+    BancoApplication.java
+    model/Conta.java                          hoje
+    model/Movimentacao.java                   amanha
+    repository/ContaRepository.java           hoje
+    repository/MovimentacaoRepository.java    amanha
+    controller/AcessoController.java          hoje e amanha
+    controller/ContaController.java           amanha
+  src/main/resources/
+    application.properties                    hoje
+    static/css/estilo.css                     pronto
+    templates/cadastro.html                   hoje
+    templates/login.html                      amanha
+    templates/conta.html                      amanha
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 2 --- Configurar o banco}
+  \onde{\texttt{src/main/resources/application.properties}}
+
+\begin{lstlisting}[language=props,basicstyle=\ttfamily\footnotesize]
+spring.application.name=banco
+
+spring.datasource.url=jdbc:mysql://localhost:3306/banco
+spring.datasource.username=root
+spring.datasource.password=
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+server.servlet.session.tracking-modes=cookie
+\end{lstlisting}
+
+  A primeira linha já estava lá. Acrescentem o resto.
+\end{frame}
+
+\begin{frame}{O que cada linha faz}
+  \begin{description}
+    \item[datasource.url] Onde está o banco.\\
+      \texttt{localhost:3306} é o MySQL do XAMPP.
+      \texttt{/banco} é o nome que criamos.
+    \item[username e password] \texttt{root}, sem senha.
+    \item[ddl-auto=update] Criar e atualizar as tabelas sozinho.
+    \item[show-sql=true] Mostrar no terminal o SQL que o Spring escreve.
+    \item[tracking-modes] Guardar o crachá só no navegador,\\
+      sem aparecer um código estranho no endereço.
+  \end{description}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 3 --- A classe Conta}
+  \onde{Pasta nova \texttt{model}, arquivo \texttt{Conta.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@Entity
+public class Conta {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  private String nome;
+
+  @Column(unique = true)
+  private String cpf;
+
+  private String senha;
+
+  private double saldo;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Passo 3 --- Completar a Conta}
+  \onde{Ainda em \texttt{model/Conta.java}}
+
+  \begin{itemize}
+    \item Construtor vazio: \texttt{public Conta() \{ \}}
+    \item Gets e sets dos cinco atributos
+  \end{itemize}
+
+  \vspace{0.5em}
+  Os imports vêm de \texttt{jakarta.persistence}:\\
+  \texttt{Entity}, \texttt{Id}, \texttt{GeneratedValue},
+  \texttt{GenerationType}, \texttt{Column}.
+
+  \vspace{0.5em}
+  \begin{alertblock}{Cuidado no import}
+    Se o VS Code oferecer \texttt{javax.persistence}, não aceitem.\\
+    O certo é \texttt{jakarta.persistence}.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Passo 4 --- Subir o Spring}
+  Confiram: o MySQL está verde no XAMPP?
+
+  \vspace{0.5em}
+  No terminal, dentro da pasta \texttt{banco}:
+
+  \vspace{0.3em}
+  \texttt{./mvnw spring-boot:run}\\
+  {\small No Windows: \texttt{.\textbackslash mvnw.cmd spring-boot:run}}
+
+  \vspace{0.5em}
+  Na primeira vez demora: o Maven baixa o JPA e o Thymeleaf.
+
+  \vspace{0.5em}
+  \begin{alertblock}{Um Spring por vez}
+    Se outro projeto ainda estiver na porta 8080, parem o outro antes.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{O que aparece no terminal}
+  No meio das mensagens, procurem por esta:
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+Hibernate: create table conta (id bigint not null auto_increment,
+  cpf varchar(255), nome varchar(255), saldo float(53) not null,
+  senha varchar(255), primary key (id))
+\end{lstlisting}
+
+  \vspace{0.4em}
+  É o SQL que o Spring escreveu a partir da classe \texttt{Conta}.\\
+  A gente não escreveu nenhuma linha dele.
+
+  \vspace{0.4em}
+  Aparece por causa do \texttt{show-sql=true}.
+\end{frame}
+
+\begin{frame}{Passo 5 --- Ver a tabela no phpMyAdmin}
+  \begin{enumerate}
+    \item Voltem para \texttt{http://localhost/phpmyadmin}
+    \item Cliquem no banco \texttt{banco}, na esquerda
+    \item Apareceu a tabela \texttt{conta}
+    \item Cliquem nela e depois em \textbf{Estrutura}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  Estão lá as cinco colunas: id, cpf, nome, saldo, senha.
+
+  \vspace{0.5em}
+  A tabela ainda está vazia.\\
+  Quem vai preencher é a tela de cadastro.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 6 --- O ContaRepository}
+  \onde{Pasta nova \texttt{repository}, arquivo \texttt{ContaRepository.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public interface ContaRepository
+    extends JpaRepository<Conta, Long> {
+
+  Conta findByCpf(String cpf);
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  Atenção: é \texttt{interface}, não \texttt{class}.
+
+  \vspace{0.4em}
+  Imports: \texttt{JpaRepository} e \texttt{Conta}.
+\end{frame}
+
+% #############################################################################
+\section{Cadastro de contas}
+
+\begin{frame}{Onde fica o HTML agora}
+  Os HTML do Thymeleaf ficam numa pasta nova:
+
+  \vspace{0.4em}
+  \begin{center}
+    \texttt{src/main/resources/templates/}
+  \end{center}
+
+  \vspace{0.4em}
+  Criem essa pasta, ao lado da \texttt{static}.
+
+  \vspace{0.5em}
+  \begin{alertblock}{Não confundam}
+    \texttt{static/} --- arquivos que vão do jeito que estão (CSS)\\
+    \texttt{templates/} --- páginas que o Thymeleaf preenche antes
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 7 --- cadastro.html, o topo}
+  \onde{Arquivo novo \texttt{templates/cadastro.html}}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abrir conta</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <div class="cartao">
+    <p class="marca">Banco Entra21</p>
+    <h1 class="titulo">Abrir conta</h1>
+
+    <p class="alerta-sucesso" th:if="${sucesso}" th:text="${sucesso}"></p>
+    <p class="alerta-erro" th:if="${erro}" th:text="${erro}"></p>
+\end{lstlisting}
+
+  O arquivo continua no próximo slide.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 7 --- cadastro.html, o formulário}
+  \onde{Continuação de \texttt{templates/cadastro.html}}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+    <form th:action="@{/cadastro}" method="post">
+      <label>Nome completo</label>
+      <input type="text" name="nome" required>
+
+      <label>CPF (só números)</label>
+      <input type="text" name="cpf" maxlength="11" required>
+
+      <label>Senha</label>
+      <input type="password" name="senha" required>
+
+      <button class="botao" type="submit">Cadastrar</button>
+    </form>
+
+    <a class="link" th:href="@{/login}">Já tenho conta</a>
+  </div>
+</body>
+</html>
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Lendo o cadastro.html}
+  \begin{itemize}
+    \item As classes (\texttt{cartao}, \texttt{botao}\ldots) já estão no CSS
+    \item Os dois \texttt{th:if} mostram mensagem só quando existe
+    \item O \texttt{th:action} manda o formulário para POST \texttt{/cadastro}
+    \item Os \texttt{name} são \texttt{nome}, \texttt{cpf} e \texttt{senha}:\\
+          iguais aos atributos da classe \texttt{Conta}
+    \item \texttt{maxlength="11"}: o CPF só com números tem 11 dígitos
+    \item \texttt{required}: o navegador não deixa enviar vazio
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 8 --- AcessoController, mostrar a tela}
+  \onde{Pasta nova \texttt{controller}, arquivo \texttt{AcessoController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@Controller
+public class AcessoController {
+
+  @Autowired
+  private ContaRepository contaRepository;
+
+  @GetMapping("/cadastro")
+  public String telaCadastro() {
+    return "cadastro";
+  }
+}
+\end{lstlisting}
+
+  \texttt{@Controller}, \textbf{não} \texttt{@RestController}.\\
+  O \texttt{"cadastro"} é o nome do arquivo, sem o \texttt{.html}.
+\end{frame}
+
+\begin{frame}{Testando a tela}
+  Parem o Spring (\texttt{Ctrl+C}) e subam de novo.
+
+  \vspace{0.5em}
+  Abram: \texttt{http://localhost:8080/cadastro}
+
+  \vspace{0.5em}
+  A tela de cadastro aparece, com o CSS.
+
+  \vspace{0.5em}
+  Se clicarem em Cadastrar agora, dá erro.\\
+  Ainda não existe o POST. É o próximo passo.
+
+  \vspace{0.5em}
+  \begin{block}{Se aparecer só a palavra ``cadastro''}
+    A classe está com \texttt{@RestController}. Troquem para \texttt{@Controller}.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 9 --- Receber o formulário}
+  \onde{Ainda em \texttt{AcessoController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/cadastro")
+public String cadastrar(Conta conta, Model model,
+                        RedirectAttributes redirect) {
+  if (contaRepository.findByCpf(conta.getCpf()) != null) {
+    model.addAttribute("erro", "Já existe uma conta com esse CPF");
+    return "cadastro";
+  }
+
+  conta.setSaldo(0);
+  contaRepository.save(conta);
+
+  redirect.addFlashAttribute("sucesso", "Conta criada! Agora é só entrar.");
+  return "redirect:/cadastro";
+}
+\end{lstlisting}
+
+  Amanhã, quando o login existir, o último \texttt{return} muda.
+\end{frame}
+
+\begin{frame}{Lendo o POST do cadastro}
+  \begin{description}
+    \item[Conta conta] O Spring pega os \texttt{name} do formulário\\
+      e preenche uma \texttt{Conta} nova: nome, cpf, senha.
+    \item[findByCpf] Se já existe alguém com esse CPF, mostra o erro\\
+      e devolve a mesma tela.
+    \item[save] Grava no banco. Aqui acontece o \texttt{INSERT}.
+    \item[addFlashAttribute] Um recado que sobrevive ao redirect.\\
+      Aparece uma vez e some.
+    \item[redirect] Depois do POST, sempre redirect.
+  \end{description}
+\end{frame}
+
+\begin{frame}{Imports do AcessoController}
+  \begin{itemize}
+    \item \texttt{Conta} e \texttt{ContaRepository}
+    \item \texttt{Controller} --- de \texttt{org.springframework.stereotype}
+    \item \texttt{Autowired}, \texttt{GetMapping}, \texttt{PostMapping}
+    \item \texttt{Model} --- de \texttt{org.springframework.ui}
+    \item \texttt{RedirectAttributes}
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se o VS Code oferecer mais de um \texttt{Model},\\
+  escolham o de \texttt{org.springframework.ui}.
+\end{frame}
+
+\begin{frame}{Passo 10 --- Cadastrar e conferir no banco}
+  \begin{enumerate}
+    \item Reiniciem o Spring
+    \item Em \texttt{/cadastro}, criem uma conta com o nome de vocês
+    \item A mensagem verde aparece
+    \item No terminal, aparece um \texttt{insert into conta}
+    \item No phpMyAdmin: tabela \texttt{conta}, aba \textbf{Visualizar}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  A linha está lá, com id 1 e saldo 0.
+
+  \vspace{0.3em}
+  Tentem cadastrar o mesmo CPF de novo: a mensagem vermelha aparece.
+\end{frame}
+
+\begin{frame}{A prova de que ficou gravado}
+  Agora o teste que o \texttt{ArrayList} nunca passou:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Parem o Spring (\texttt{Ctrl+C})
+    \item Subam de novo
+    \item Olhem o phpMyAdmin
+  \end{enumerate}
+
+  \vspace{0.5em}
+  A conta continua lá.\\
+  Podem até desligar o computador. Amanhã ela ainda vai estar lá.
+\end{frame}
+
+\begin{frame}[fragile]{Olhando pela aba SQL}
+  No phpMyAdmin, com o banco \texttt{banco} aberto, aba \textbf{SQL}:
+
+\begin{lstlisting}[language=SQL,basicstyle=\ttfamily\footnotesize]
+SELECT * FROM conta;
+
+SELECT nome, cpf FROM conta WHERE nome LIKE 'A%';
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O primeiro mostra todas as contas.\\
+  O segundo, só nome e CPF de quem começa com A.
+
+  \vspace{0.4em}
+  Não precisa decorar. É só para ver que o dado está no banco.
+\end{frame}
+
+\begin{frame}{Conferindo o Dia 1}
+  \begin{itemize}
+    \item [ ] XAMPP com MySQL verde
+    \item [ ] O Spring sobe sem erro
+    \item [ ] A tabela \texttt{conta} apareceu sozinha
+    \item [ ] \texttt{/cadastro} abre com o CSS
+    \item [ ] Cadastrar mostra a mensagem verde
+    \item [ ] A conta aparece no phpMyAdmin
+    \item [ ] CPF repetido mostra a mensagem vermelha
+    \item [ ] Reiniciar o Spring não apaga a conta
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Erros que mais aparecem}
+  \begin{itemize}
+    \item \texttt{Communications link failure} --- o MySQL do XAMPP
+          está desligado
+    \item \texttt{Unknown database 'banco'} --- faltou criar o banco
+          no phpMyAdmin
+    \item \texttt{Access denied for user 'root'} --- a senha no
+          \texttt{application.properties} está errada
+    \item Página de erro com \texttt{template might not exist} ---
+          o arquivo não está em \texttt{templates/}, ou o nome no
+          \texttt{return} está diferente
+    \item Tabela não aparece --- faltou o \texttt{@Entity}
+    \item Página sem CSS --- o \texttt{link} do CSS está diferente
+          de \texttt{/css/estilo.css}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Fim do Dia 1}
+  \begin{center}
+    \Large Amanhã: login, saldo, depósito, saque,\\
+    PIX e extrato.\\[0.8em]
+    \normalsize
+    Não apaguem o banco nem as contas.\\
+    Amanhã a gente entra com elas.
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{Dia 2 --- Login e sessão}
+
+\begin{frame}{Onde paramos ontem}
+  \begin{itemize}
+    \item O XAMPP liga o MySQL
+    \item O Spring cria a tabela \texttt{conta} sozinho
+    \item \texttt{/cadastro} grava uma conta nova
+    \item Os dados ficam no banco mesmo depois de reiniciar
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{block}{Antes de tudo, hoje}
+    \begin{enumerate}
+      \item XAMPP: Start no Apache e no MySQL
+      \item Abram o projeto \texttt{banco} e subam o Spring
+      \item Confiram no phpMyAdmin: as contas de ontem estão lá?
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}{O plano de hoje}
+  \begin{block}{Parte 3 --- 18h30 às 20h}
+    Tela de login, sessão, página da conta, depósito e saque.
+  \end{block}
+
+  \vspace{0.4em}
+  \begin{block}{Parte 4 --- 20h20 às 22h}
+    PIX, extrato e o teste final com pessoas do gerador.
+  \end{block}
+
+  \vspace{0.6em}
+  Ao final, cada um terá um banco funcionando,\\
+  com o dinheiro indo de uma conta para outra.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 11 --- login.html, o topo}
+  \onde{Arquivo novo \texttt{templates/login.html}.\\
+        Copiem o \texttt{<head>} do cadastro e troquem o título para Entrar.}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+<body>
+  <div class="cartao">
+    <p class="marca">Banco Entra21</p>
+    <h1 class="titulo">Entrar</h1>
+
+    <p class="alerta-sucesso" th:if="${sucesso}" th:text="${sucesso}"></p>
+    <p class="alerta-erro" th:if="${erro}" th:text="${erro}"></p>
+\end{lstlisting}
+
+  É o mesmo começo do cadastro, só muda o título.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 11 --- login.html, o formulário}
+  \onde{Continuação de \texttt{templates/login.html}}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+    <form th:action="@{/login}" method="post">
+      <label>CPF</label>
+      <input type="text" name="cpf" maxlength="11" required>
+
+      <label>Senha</label>
+      <input type="password" name="senha" required>
+
+      <button class="botao" type="submit">Entrar</button>
+    </form>
+
+    <a class="link" th:href="@{/cadastro}">Abrir uma conta</a>
+  </div>
+</body>
+</html>
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 12 --- Mostrar o login}
+  \onde{\texttt{AcessoController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/")
+public String inicio() {
+  return "redirect:/login";
+}
+
+@GetMapping("/login")
+public String telaLogin() {
+  return "login";
+}
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Quem abrir \texttt{http://localhost:8080} cai direto no login.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 13 --- Cadastro agora leva ao login}
+  \onde{\texttt{AcessoController.java}, no fim do POST \texttt{/cadastro}}
+
+  Ontem era:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+  return "redirect:/cadastro";
+\end{lstlisting}
+
+  Troquem por:
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+  return "redirect:/login";
+\end{lstlisting}
+
+  \vspace{0.3em}
+  A mensagem ``Conta criada!'' agora aparece na tela de login.\\
+  Por isso o \texttt{login.html} também tem o \texttt{th:if} do sucesso.
+\end{frame}
+
+\begin{frame}{Como funciona o login}
+  A pessoa manda CPF e senha. O servidor:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Procura a conta pelo CPF (\texttt{findByCpf})
+    \item Se não achou, erro
+    \item Se achou, mas a senha é diferente, erro
+    \item Se deu tudo certo, guarda o id da conta na sessão
+    \item Manda para \texttt{/conta}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  O erro é o mesmo nos dois casos: ``CPF ou senha incorretos''.\\
+  Assim ninguém descobre quais CPFs têm conta.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 14 --- POST do login}
+  \onde{\texttt{AcessoController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/login")
+public String entrar(@RequestParam String cpf, @RequestParam String senha,
+                     Model model, HttpSession session) {
+  Conta conta = contaRepository.findByCpf(cpf);
+
+  if (conta == null || !conta.getSenha().equals(senha)) {
+    model.addAttribute("erro", "CPF ou senha incorretos");
+    return "login";
+  }
+
+  session.setAttribute("contaId", conta.getId());
+  return "redirect:/conta";
+}
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}{Lendo o POST do login}
+  \begin{description}
+    \item[findByCpf] Procura a conta no banco. Se não achar, vem \texttt{null}.
+    \item[||] Quer dizer ``ou''. Não achou a conta \textbf{ou} a senha é outra.
+    \item[equals] Compara texto. Com \texttt{String}, nunca usem \texttt{==}.
+    \item[!] Quer dizer ``não''. \texttt{!equals} é ``não é igual''.
+    \item[return] Devolve a mesma tela de login, agora com o erro.
+  \end{description}
+\end{frame}
+
+\begin{frame}[fragile]{A sessão por dentro}
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+session.setAttribute("contaId", conta.getId());
+\end{lstlisting}
+
+  \vspace{0.3em}
+  É o crachá sendo entregue.\\
+  Guardamos só o \textbf{id}, com a etiqueta \texttt{"contaId"}.
+
+  \vspace{0.5em}
+  Cada navegador tem a sua sessão.\\
+  Se abrirem uma janela anônima, podem entrar com outra conta\\
+  ao mesmo tempo.
+
+  \vspace{0.5em}
+  Import: \texttt{jakarta.servlet.http.HttpSession}.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 15 --- Sair}
+  \onde{\texttt{AcessoController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/sair")
+public String sair(HttpSession session) {
+  session.invalidate();
+  return "redirect:/login";
+}
+\end{lstlisting}
+
+  \vspace{0.4em}
+  \texttt{invalidate} rasga o crachá.\\
+  Tudo que estava na sessão é esquecido.
+\end{frame}
+
+\begin{frame}{Uma palavra sobre a senha}
+  Estamos guardando a senha do jeito que a pessoa digitou.\\
+  Quem abrir o phpMyAdmin consegue ler.
+
+  \vspace{0.6em}
+  Isso serve só para aprender.
+
+  \vspace{0.6em}
+  Em sistema de verdade:
+  \begin{itemize}
+    \item a senha é guardada embaralhada, sem volta (\textit{hash})
+    \item o login é feito pelo \textbf{Spring Security}
+  \end{itemize}
+
+  \vspace{0.6em}
+  Nunca usem uma senha de verdade de vocês nesse projeto.
+\end{frame}
+
+% #############################################################################
+\section{A página da conta}
+
+\begin{frame}[fragile]{Passo 16 --- ContaController}
+  \onde{Arquivo novo \texttt{controller/ContaController.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@Controller
+public class ContaController {
+
+  @Autowired
+  private ContaRepository contaRepository;
+
+  public Conta contaLogada(HttpSession session) {
+    Long id = (Long) session.getAttribute("contaId");
+    if (id == null) {
+      return null;
+    }
+    return contaRepository.findById(id).orElse(null);
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}{Lendo o contaLogada}
+  Uma função que olha o crachá e devolve a conta,
+  ou \texttt{null} se ninguém entrou.
+
+  \vspace{0.3em}
+  \begin{description}
+    \item[getAttribute] Pega o que está na sessão com a etiqueta \texttt{"contaId"}.
+    \item[(Long)] A sessão guarda tudo como \texttt{Object}.\\
+      O \texttt{(Long)} avisa ao Java: ``isso aqui é um Long''.
+    \item[id == null] Ninguém fez login nesse navegador.
+    \item[findById] Busca a conta no banco pelo id.
+    \item[orElse(null)] Se não achar, devolve \texttt{null}.
+  \end{description}
+
+  \vspace{0.4em}
+  Por que buscar no banco de novo?\\
+  Porque o saldo pode ter mudado. Por exemplo, alguém mandou um PIX.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 17 --- GET /conta}
+  \onde{\texttt{ContaController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@GetMapping("/conta")
+public String telaConta(HttpSession session, Model model) {
+  Conta conta = contaLogada(session);
+  if (conta == null) {
+    return "redirect:/login";
+  }
+
+  model.addAttribute("conta", conta);
+  return "conta";
+}
+\end{lstlisting}
+
+  Sem crachá, volta para o login.\\
+  Com crachá, coloca a conta na bandeja e mostra a página.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 18 --- conta.html, o topo}
+  \onde{Arquivo novo \texttt{templates/conta.html}.\\
+        Copiem o \texttt{<head>} do cadastro e troquem o título para Minha conta.}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+<body>
+  <div class="cartao cartao-larga">
+    <div class="topo">
+      <p class="marca">Banco Entra21</p>
+      <a class="botao-secundario" th:href="@{/sair}">Sair</a>
+    </div>
+
+    <p class="ola">Olá, <strong th:text="${conta.nome}">Nome</strong></p>
+\end{lstlisting}
+
+  \texttt{\$\{conta.nome\}}: a conta que o Controller pôs na bandeja,\\
+  e dela o \texttt{getNome()}.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 18 --- conta.html, o saldo}
+  \onde{Continuação de \texttt{templates/conta.html}}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+    <div class="saldo">
+      <p class="saldo-rotulo">Saldo disponível</p>
+      <p class="saldo-valor" th:text="'R$ ' +
+        ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">
+        R$ 0,00</p>
+    </div>
+
+    <p class="alerta-sucesso" th:if="${sucesso}" th:text="${sucesso}"></p>
+    <p class="alerta-erro" th:if="${erro}" th:text="${erro}"></p>
+\end{lstlisting}
+
+  A linha comprida do saldo é explicada no próximo slide.
+\end{frame}
+
+\begin{frame}[fragile]{Formatando o dinheiro}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}
+\end{lstlisting}
+
+  \vspace{0.3em}
+  Sem isso, 1234.5 aparece como \texttt{1234.5}.\\
+  Com isso, aparece \texttt{1.234,50}.
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Pedaço & Significa \\
+    \midrule
+    \texttt{conta.saldo} & o número \\
+    \texttt{1} & pelo menos 1 dígito antes da vírgula \\
+    \texttt{'POINT'} & separa os milhares com ponto \\
+    \texttt{2} & duas casas depois da vírgula \\
+    \texttt{'COMMA'} & os centavos vêm depois de uma vírgula \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 19 --- conta.html, o depósito}
+  \onde{Continuação de \texttt{templates/conta.html}}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+    <div class="operacoes">
+      <form class="operacao" th:action="@{/deposito}" method="post">
+        <h3>Depósito</h3>
+        <label>Valor</label>
+        <input type="number" name="valor" step="0.01" min="0.01" required>
+        <button class="botao" type="submit">Depositar</button>
+      </form>
+\end{lstlisting}
+
+  \texttt{step="0.01"} deixa digitar centavos.\\
+  \texttt{min="0.01"} não deixa digitar zero nem negativo.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 19 --- conta.html, o saque}
+  \onde{Continuação de \texttt{templates/conta.html}}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+      <form class="operacao" th:action="@{/saque}" method="post">
+        <h3>Saque</h3>
+        <label>Valor</label>
+        <input type="number" name="valor" step="0.01" min="0.01" required>
+        <button class="botao" type="submit">Sacar</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+\end{lstlisting}
+
+  O primeiro \texttt{</div>} fecha as operações.\\
+  O segundo fecha o cartão.
+\end{frame}
+
+\begin{frame}{Testando a página da conta}
+  \begin{enumerate}
+    \item Reiniciem o Spring
+    \item Abram \texttt{http://localhost:8080}: cai no login
+    \item Entrem com a conta de ontem
+    \item Aparece o nome e \texttt{R\$ 0,00}
+    \item Cliquem em Sair e tentem abrir \texttt{/conta} direto
+    \item Volta para o login: sem crachá, não entra
+  \end{enumerate}
+
+  \vspace{0.4em}
+  Os botões de depósito e saque ainda dão erro.\\
+  É o próximo passo.
+\end{frame}
+
+% #############################################################################
+\section{Depósito e saque}
+
+\begin{frame}[fragile]{Passo 20 --- Depósito, as conferências}
+  \onde{\texttt{ContaController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/deposito")
+public String depositar(@RequestParam double valor, HttpSession session,
+                        RedirectAttributes redirect) {
+  Conta conta = contaLogada(session);
+  if (conta == null) {
+    return "redirect:/login";
+  }
+
+  if (valor <= 0) {
+    redirect.addFlashAttribute("erro", "Digite um valor maior que zero");
+    return "redirect:/conta";
+  }
+\end{lstlisting}
+
+  O método continua no próximo slide.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 20 --- Depósito, somando}
+  \onde{Ainda no método \texttt{depositar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+  conta.setSaldo(conta.getSaldo() + valor);
+  contaRepository.save(conta);
+
+  redirect.addFlashAttribute("sucesso", "Depósito feito");
+  return "redirect:/conta";
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Lendo o depósito}
+  \begin{enumerate}
+    \item \texttt{@RequestParam double valor} --- vem do \texttt{name="valor"}
+    \item Confere o crachá
+    \item Recusa valor zero ou negativo
+    \item Soma no saldo do objeto
+    \item \texttt{save} --- como a conta já tem id, vira \texttt{UPDATE}
+    \item Deixa o recado verde e volta para \texttt{/conta}
+  \end{enumerate}
+
+  \vspace{0.5em}
+  O \texttt{/conta} busca a conta de novo no banco.\\
+  Por isso o saldo aparece atualizado.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 21 --- Saque, as conferências}
+  \onde{\texttt{ContaController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@PostMapping("/saque")
+public String sacar(@RequestParam double valor, HttpSession session,
+                    RedirectAttributes redirect) {
+  Conta conta = contaLogada(session);
+  if (conta == null) {
+    return "redirect:/login";
+  }
+
+  if (valor <= 0) {
+    redirect.addFlashAttribute("erro", "Digite um valor maior que zero");
+    return "redirect:/conta";
+  }
+\end{lstlisting}
+
+  Até aqui é igual ao depósito.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 21 --- Saque, tirando do saldo}
+  \onde{Ainda no método \texttt{sacar}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+  if (conta.getSaldo() < valor) {
+    redirect.addFlashAttribute("erro", "Saldo insuficiente");
+    return "redirect:/conta";
+  }
+
+  conta.setSaldo(conta.getSaldo() - valor);
+  contaRepository.save(conta);
+
+  redirect.addFlashAttribute("sucesso", "Saque feito");
+  return "redirect:/conta";
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{O saque é o depósito com uma conferência a mais}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Depósito & Saque \\
+    \midrule
+    confere o crachá & confere o crachá \\
+    valor maior que zero & valor maior que zero \\
+    --- & \textbf{saldo suficiente?} \\
+    saldo \textbf{+} valor & saldo \textbf{-} valor \\
+    \texttt{save} & \texttt{save} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  Igual à venda da aula 06:\\
+  primeiro confere o estoque, depois tira.
+\end{frame}
+
+\begin{frame}{Imports do ContaController}
+  \begin{itemize}
+    \item \texttt{Conta} e \texttt{ContaRepository}
+    \item \texttt{Controller}, \texttt{Autowired}
+    \item \texttt{GetMapping}, \texttt{PostMapping}, \texttt{RequestParam}
+    \item \texttt{Model} --- de \texttt{org.springframework.ui}
+    \item \texttt{RedirectAttributes}
+    \item \texttt{HttpSession} --- de \texttt{jakarta.servlet.http}
+  \end{itemize}
+
+  \vspace{0.5em}
+  Se faltar um import, o VS Code sublinha em vermelho.\\
+  Aceitem o import que ele oferece, olhando o nome do pacote.
+\end{frame}
+
+\begin{frame}{Conferindo a Parte 3}
+  \begin{itemize}
+    \item [ ] \texttt{/} leva para o login
+    \item [ ] Senha errada mostra ``CPF ou senha incorretos''
+    \item [ ] Login certo mostra o nome e o saldo
+    \item [ ] Depositar 500 mostra \texttt{R\$ 500,00}
+    \item [ ] Sacar mais do que tem mostra ``Saldo insuficiente''
+    \item [ ] No phpMyAdmin o saldo mudou
+    \item [ ] Sair e abrir \texttt{/conta} volta para o login
+    \item [ ] F5 depois do depósito \textbf{não} deposita de novo
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Erros que mais aparecem}
+  \begin{itemize}
+    \item \texttt{Required parameter 'valor' is not present} ---
+          o \texttt{name} do input não é \texttt{valor}
+    \item Saldo não muda --- faltou o \texttt{contaRepository.save(conta)}
+    \item \texttt{Exception evaluating SpringEL} no \texttt{conta.html} ---
+          o Controller não fez \texttt{model.addAttribute("conta", ...)}
+    \item Sempre volta para o login --- no \texttt{setAttribute} e no
+          \texttt{getAttribute} a etiqueta está diferente
+    \item Mensagem não aparece --- usaram \texttt{model} em vez de
+          \texttt{redirect.addFlashAttribute} antes de um redirect
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Intervalo}
+  \begin{center}
+    \Large Retomamos às \textbf{20h20}\\[0.8em]
+    \normalsize
+    Na volta: PIX entre contas e o extrato.\\
+    Deixem pelo menos duas contas cadastradas.
+  \end{center}
+\end{frame}
+
+% #############################################################################
+\section{PIX}
+
+\begin{frame}{O que é um PIX no nosso banco}
+  Dinheiro sai de uma conta e entra em outra.\\
+  Quem recebe é encontrado pelo CPF.
+
+  \vspace{0.5em}
+  O servidor faz nesta ordem:
+  \begin{enumerate}
+    \item Confere o crachá: quem está mandando
+    \item Valor maior que zero
+    \item Acha a conta de destino pelo CPF
+    \item Não deixa mandar para si mesmo
+    \item Confere se quem manda tem saldo
+    \item Tira de um, põe no outro, grava os dois
+  \end{enumerate}
+
+  \vspace{0.3em}
+  Primeiro confere \textbf{tudo}. Só depois mexe no dinheiro.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 22 --- O formulário do PIX}
+  \onde{\texttt{templates/conta.html}, dentro da \texttt{div operacoes},\\
+        depois do formulário de saque}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+<form class="operacao" th:action="@{/pix}" method="post">
+  <h3>PIX</h3>
+  <label>CPF de quem recebe</label>
+  <input type="text" name="cpfDestino" maxlength="11" required>
+  <label>Valor</label>
+  <input type="number" name="valor" step="0.01" min="0.01" required>
+  <button class="botao" type="submit">Enviar PIX</button>
+</form>
+\end{lstlisting}
+
+  Dois campos: \texttt{cpfDestino} e \texttt{valor}.\\
+  O CSS já coloca os três formulários lado a lado.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 23 --- PIX, o começo}
+  \onde{\texttt{ContaController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@Transactional
+@PostMapping("/pix")
+public String pix(@RequestParam String cpfDestino, @RequestParam double valor,
+                  HttpSession session, RedirectAttributes redirect) {
+  Conta origem = contaLogada(session);
+  if (origem == null) {
+    return "redirect:/login";
+  }
+
+  if (valor <= 0) {
+    redirect.addFlashAttribute("erro", "Digite um valor maior que zero");
+    return "redirect:/conta";
+  }
+\end{lstlisting}
+
+  \texttt{origem} é quem manda. Quem recebe vem no próximo slide.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 23 --- PIX, achando quem recebe}
+  \onde{Ainda no método \texttt{pix}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+  Conta destino = contaRepository.findByCpf(cpfDestino);
+  if (destino == null) {
+    redirect.addFlashAttribute("erro", "Nenhuma conta com esse CPF");
+    return "redirect:/conta";
+  }
+
+  if (destino.getId().equals(origem.getId())) {
+    redirect.addFlashAttribute("erro", "Não dá para mandar PIX para você mesmo");
+    return "redirect:/conta";
+  }
+\end{lstlisting}
+
+  Por que \texttt{equals} para comparar os ids?\\
+  \texttt{Long} com L maiúsculo é objeto. Objeto se compara com \texttt{equals}.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 23 --- PIX, mexendo no dinheiro}
+  \onde{Ainda no método \texttt{pix}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+  if (origem.getSaldo() < valor) {
+    redirect.addFlashAttribute("erro", "Saldo insuficiente");
+    return "redirect:/conta";
+  }
+
+  origem.setSaldo(origem.getSaldo() - valor);
+  destino.setSaldo(destino.getSaldo() + valor);
+  contaRepository.save(origem);
+  contaRepository.save(destino);
+
+  redirect.addFlashAttribute("sucesso",
+      "PIX enviado para " + destino.getNome());
+  return "redirect:/conta";
+}
+\end{lstlisting}
+
+  Tira de um, põe no outro, grava os dois.
+\end{frame}
+
+\begin{frame}{@Transactional: tudo ou nada}
+  Imaginem que a luz acaba bem no meio do PIX:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item O \texttt{save(origem)} já rodou: a Ana perdeu 100
+    \item O \texttt{save(destino)} não rodou: o Bruno não recebeu
+    \item Os 100 reais sumiram
+  \end{itemize}
+
+  \vspace{0.5em}
+  O \texttt{@Transactional} em cima do método diz ao banco:\\
+  ``ou grava tudo que tem aqui dentro, ou não grava nada''.
+
+  \vspace{0.5em}
+  \begin{alertblock}{Cuidado no import}
+    O certo é \texttt{org.springframework.transaction.annotation.Transactional}.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Conferindo o PIX}
+  Usem duas contas: uma no navegador normal,\\
+  outra numa janela anônima.
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item [ ] PIX para um CPF que não existe: mensagem vermelha
+    \item [ ] PIX para o próprio CPF: mensagem vermelha
+    \item [ ] PIX maior que o saldo: ``Saldo insuficiente''
+    \item [ ] PIX certo: o saldo cai de um lado
+    \item [ ] F5 na janela anônima: o saldo sobe do outro lado
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Extrato}
+
+\begin{frame}{Por que outra tabela}
+  O saldo diz \textbf{quanto} tem.\\
+  Não diz \textbf{o que aconteceu}.
+
+  \vspace{0.5em}
+  Para o extrato, cada operação vira uma linha nova:
+
+  \vspace{0.4em}
+  \begin{center}
+  \small
+  \begin{tabular}{lllll}
+    \toprule
+    id & conta\_id & descricao & valor & data\_hora \\
+    \midrule
+    1 & 1 & Depósito & 500.50 & 23/09 19:02 \\
+    2 & 1 & Saque & -100.00 & 23/09 19:05 \\
+    3 & 1 & PIX enviado para Bruno Lima & -150.25 & 23/09 20:31 \\
+    4 & 2 & PIX recebido de Ana Souza & 150.25 & 23/09 20:31 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.4em}
+  O \texttt{conta\_id} diz de quem é a linha.\\
+  Um PIX gera \textbf{duas} linhas: uma em cada conta.
+\end{frame}
+
+\begin{frame}{Saiu ou entrou?}
+  Na coluna \texttt{valor}:
+
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Entrou dinheiro: número \textbf{positivo}\\
+          depósito, PIX recebido
+    \item Saiu dinheiro: número \textbf{negativo}\\
+          saque, PIX enviado
+  \end{itemize}
+
+  \vspace{0.5em}
+  Assim, no extrato, é fácil pintar:\\
+  verde para positivo, vermelho para negativo.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 24 --- A classe Movimentacao}
+  \onde{Arquivo novo \texttt{model/Movimentacao.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\scriptsize]
+@Entity
+public class Movimentacao {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  private String descricao;
+
+  private double valor;
+
+  private LocalDateTime dataHora;
+
+  @ManyToOne
+  private Conta conta;
+\end{lstlisting}
+
+  Construtor vazio e gets e sets dos cinco atributos.
+\end{frame}
+
+\begin{frame}{@ManyToOne --- muitas para uma}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center,
+                  minimum width=2.4cm, minimum height=0.8cm,
+                  font=\small},
+      meio/.style={draw, rounded corners, align=center,
+                   minimum width=2.4cm, minimum height=0.55cm,
+                   font=\scriptsize},
+      seta/.style={-{Latex}, thick}
+    ]
+    \node[box, fill=blue!15] (c) {Conta da Ana};
+    \node[meio, fill=yellow!25, right=2.2cm of c, yshift=0.8cm] (m1) {Depósito};
+    \node[meio, fill=yellow!25, right=2.2cm of c] (m2) {Saque};
+    \node[meio, fill=yellow!25, right=2.2cm of c, yshift=-0.8cm] (m3) {PIX enviado};
+
+    \draw[seta] (m1.west) -- (c);
+    \draw[seta] (m2.west) -- (c);
+    \draw[seta] (m3.west) -- (c);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.4em}
+  \textbf{Muitas} movimentações apontam para \textbf{uma} conta.\\
+  No banco, isso vira a coluna \texttt{conta\_id}.
+
+  \vspace{0.3em}
+  Na aula 05 a gente escrevia \texttt{int categoriaId} na mão.\\
+  Agora a gente põe a \texttt{Conta} inteira e o JPA guarda só o id.
+\end{frame}
+
+\begin{frame}{LocalDateTime}
+  \texttt{LocalDateTime} guarda dia e hora juntos.
+
+  \vspace{0.5em}
+  \texttt{LocalDateTime.now()} pega o momento de agora.
+
+  \vspace{0.5em}
+  No banco vira a coluna \texttt{data\_hora}.\\
+  O JPA troca o \texttt{dataHora} do Java pelo \texttt{data\_hora} do banco.
+
+  \vspace{0.5em}
+  Imports:
+  \begin{itemize}
+    \item \texttt{java.time.LocalDateTime}
+    \item \texttt{ManyToOne} e as outras anotações de \texttt{jakarta.persistence}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 25 --- MovimentacaoRepository}
+  \onde{Arquivo novo \texttt{repository/MovimentacaoRepository.java}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+public interface MovimentacaoRepository
+    extends JpaRepository<Movimentacao, Long> {
+
+  List<Movimentacao> findByContaOrderByDataHoraDesc(Conta conta);
+}
+\end{lstlisting}
+
+  \vspace{0.2em}
+  \begin{center}
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    Pedaço & Significa \\
+    \midrule
+    \texttt{findBy} & buscar onde \\
+    \texttt{Conta} & a conta é esta \\
+    \texttt{OrderBy} & em ordem de \\
+    \texttt{DataHora} & data e hora \\
+    \texttt{Desc} & da mais nova para a mais velha \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 26 --- Uma função para registrar}
+  \onde{\texttt{ContaController.java}, acrescentar}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+@Autowired
+private MovimentacaoRepository movimentacaoRepository;
+
+public void registrar(Conta conta, String descricao, double valor) {
+  Movimentacao mov = new Movimentacao();
+  mov.setConta(conta);
+  mov.setDescricao(descricao);
+  mov.setValor(valor);
+  mov.setDataHora(LocalDateTime.now());
+  movimentacaoRepository.save(mov);
+}
+\end{lstlisting}
+
+  Em vez de repetir essas linhas em cada operação,\\
+  chamamos \texttt{registrar} com os três dados.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 27 --- Registrar cada operação}
+  \onde{\texttt{ContaController.java}, logo depois de cada \texttt{save}}
+
+  No depósito:
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+registrar(conta, "Depósito", valor);
+\end{lstlisting}
+
+  No saque, com o menos na frente:
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+registrar(conta, "Saque", -valor);
+\end{lstlisting}
+
+  No PIX, uma linha para cada conta:
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+registrar(origem, "PIX enviado para " + destino.getNome(), -valor);
+registrar(destino, "PIX recebido de " + origem.getNome(), valor);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Passo 28 --- Mandar o extrato para a página}
+  \onde{\texttt{ContaController.java}, no GET \texttt{/conta}}
+
+\begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+model.addAttribute("conta", conta);
+model.addAttribute("movimentacoes",
+    movimentacaoRepository.findByContaOrderByDataHoraDesc(conta));
+return "conta";
+\end{lstlisting}
+
+  \vspace{0.4em}
+  A linha do meio é nova.\\
+  Coloca na bandeja a lista de movimentações dessa conta.
+
+  \vspace{0.4em}
+  Imports novos no Controller:\\
+  \texttt{Movimentacao}, \texttt{MovimentacaoRepository},
+  \texttt{LocalDateTime}, \texttt{Transactional}.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 29 --- O extrato, o cabeçalho}
+  \onde{\texttt{templates/conta.html}, depois da \texttt{div operacoes},\\
+        antes de fechar a \texttt{div cartao}}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\footnotesize]
+<h2 class="subtitulo">Extrato</h2>
+
+<table class="extrato">
+  <tr>
+    <th>Data</th>
+    <th>Descrição</th>
+    <th>Valor</th>
+  </tr>
+\end{lstlisting}
+
+  Até aqui é HTML comum: o título e a primeira linha da tabela.
+\end{frame}
+
+\begin{frame}[fragile]{Passo 29 --- O extrato, uma linha por movimentação}
+  \onde{Continuação, logo abaixo}
+
+\begin{lstlisting}[language=HTML,basicstyle=\ttfamily\scriptsize]
+  <tr th:each="mov : ${movimentacoes}">
+    <td th:text="${#temporals.format(mov.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+    <td th:text="${mov.descricao}"></td>
+    <td th:text="${#numbers.formatDecimal(mov.valor, 1, 'POINT', 2, 'COMMA')}"
+        th:classappend="${mov.valor < 0} ? 'saida' : 'entrada'"></td>
+  </tr>
+</table>
+
+<p class="vazio" th:if="${movimentacoes.isEmpty()}">Nenhuma movimentação ainda.</p>
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Lendo o extrato}
+  \begin{description}
+    \item[th:each] Repete o \texttt{<tr>} para cada \texttt{mov} da lista.
+    \item[\#temporals.format] Escreve a data do jeito brasileiro:\\
+      \texttt{23/09/2026 20:31}.
+    \item[formatDecimal] O mesmo que usamos no saldo.
+    \item[th:classappend] Acrescenta uma classe do CSS:\\
+      \texttt{saida} (vermelho) se o valor for negativo,\\
+      \texttt{entrada} (verde) se não for.
+    \item[isEmpty()] Se a lista estiver vazia, mostra o aviso.
+  \end{description}
+
+  \vspace{0.3em}
+  O \texttt{? :} é um \texttt{if} curto: ``é negativo? então saida, senão entrada''.
+\end{frame}
+
+\begin{frame}{Testando o extrato}
+  \begin{enumerate}
+    \item Reiniciem o Spring
+    \item No terminal: \texttt{create table movimentacao}
+    \item No phpMyAdmin: a tabela nova, com a coluna \texttt{conta\_id}
+    \item Entrem, depositem, saquem e mandem um PIX
+    \item Cada operação aparece no extrato, a mais nova em cima
+    \item Entrem na outra conta: o PIX recebido aparece em verde
+  \end{enumerate}
+
+  \vspace{0.4em}
+  O que foi feito antes do extrato não aparece.\\
+  Só a partir de agora cada operação é registrada.
+\end{frame}
+
+% #############################################################################
+\section{Teste final}
+
+\begin{frame}{Pessoas de mentira, CPF válido}
+  Para testar, vamos criar pessoas que não existem.
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item Abram \texttt{https://www.4devs.com.br/gerador\_de\_pessoas}
+    \item Marquem para gerar o CPF \textbf{sem pontuação}
+    \item Cliquem em \textbf{Gerar Pessoa}
+    \item Anotem o nome e o CPF
+    \item Façam isso três vezes
+  \end{enumerate}
+
+  \vspace{0.5em}
+  O CPF gerado é válido, mas não é de ninguém.\\
+  Por isso não usamos o CPF de vocês.
+\end{frame}
+
+\begin{frame}{Roteiro do teste}
+  \begin{enumerate}
+    \item Cadastrem as três pessoas, com senhas simples
+    \item Entrem com a primeira e depositem R\$ 1.000
+    \item Mandem R\$ 300 de PIX para a segunda
+    \item Mandem R\$ 200 de PIX para a terceira
+    \item Saquem R\$ 50
+    \item Saiam e entrem com a segunda: saldo R\$ 300
+    \item Da segunda, mandem R\$ 100 para a terceira
+    \item Entrem com a terceira: saldo R\$ 300, dois PIX recebidos
+  \end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{Conferindo pelo phpMyAdmin}
+\begin{lstlisting}[language=SQL,basicstyle=\ttfamily\footnotesize]
+SELECT nome, saldo FROM conta;
+
+SELECT * FROM movimentacao;
+
+SELECT SUM(saldo) FROM conta;
+\end{lstlisting}
+
+  \vspace{0.4em}
+  O último soma o saldo de todas as contas.\\
+  Depois do roteiro, deve dar R\$ 950: os 1.000 depositados\\
+  menos os 50 sacados.
+
+  \vspace{0.4em}
+  PIX não cria nem some dinheiro. Só muda de lugar.
+\end{frame}
+
+\begin{frame}{Critérios de aceite}
+  \begin{itemize}
+    \item [ ] Cadastro grava no MySQL e recusa CPF repetido
+    \item [ ] Login recusa senha errada
+    \item [ ] \texttt{/conta} sem login volta para o login
+    \item [ ] Saldo aparece como \texttt{R\$ 1.234,56}
+    \item [ ] Saque e PIX recusam quando falta saldo
+    \item [ ] PIX recusa CPF que não existe e o próprio CPF
+    \item [ ] Extrato mostra tudo, o mais novo em cima, com cores
+    \item [ ] Reiniciar o Spring não perde nada
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Erros que mais aparecem}
+  \begin{itemize}
+    \item Tabela \texttt{movimentacao} sem a coluna \texttt{conta\_id} ---
+          faltou o \texttt{@ManyToOne}
+    \item Extrato vazio sempre --- faltou chamar \texttt{registrar}
+          ou faltou o \texttt{addAttribute("movimentacoes", ...)}
+    \item \texttt{Exception evaluating SpringEL: isEmpty} --- o GET
+          \texttt{/conta} não manda \texttt{movimentacoes}
+    \item Valores do PIX invertidos --- o menos ficou no
+          \texttt{registrar} errado
+    \item Data com formato estranho --- conferir o
+          \texttt{\#temporals.format}
+  \end{itemize}
+\end{frame}
+
+% #############################################################################
+\section{Recapitulando}
+
+\begin{frame}{O que vimos nesses dois dias}
+  \begin{enumerate}
+    \item Thymeleaf: o servidor devolve a página já pronta
+    \item \texttt{th:text}, \texttt{th:if}, \texttt{th:each}, \texttt{th:action}
+    \item Formulário comum com \texttt{@RequestParam} e redirect depois do POST
+    \item MySQL no XAMPP e o phpMyAdmin para olhar dentro
+    \item \texttt{@Entity}, Repository e \texttt{save} no lugar do \texttt{ArrayList}
+    \item Sessão como crachá do login
+    \item \texttt{@Transactional} para o PIX ser tudo ou nada
+    \item \texttt{@ManyToOne} ligando movimentação e conta
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Do ATM ao banco}
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    ATM (aula 07) & Banco (aula 08) \\
+    \midrule
+    uma conta só & várias contas, com login \\
+    saldo numa variável & saldo no MySQL \\
+    parou o Spring, zerou & parou o Spring, continua \\
+    JavaScript monta a tela & Thymeleaf monta a tela \\
+    Axios chama \texttt{/api/conta} & o formulário chama \texttt{/deposito} \\
+    sem histórico & extrato completo \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Se sobrar tempo}
+  \begin{enumerate}
+    \item Mostrar o CPF da pessoa embaixo do nome, na página da conta
+    \item Não deixar sacar mais de R\$ 1.000 de uma vez
+    \item Na tela de cadastro, recusar CPF que não tenha 11 caracteres
+  \end{enumerate}
+
+  \vspace{0.6em}
+  Os três usam só o que vimos hoje:\\
+  um \texttt{th:text}, um \texttt{if} no Controller, um \texttt{length()}.
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \Huge Obrigado!\\[1.2em]
+    \normalsize Mauricio Duailibi Neto\\
+    Turma Java Entra21
+  \end{center}
+\end{frame}
+
+\end{document}
