@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha conta</title>
+
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+
+    <div class="cartao cartao-larga">
+        <div class="topo">
+            <p class="marca">Banco Entra21</p>
+            <a class="botao-secundario" th:href="@{/sair}">Sair</a>
+        </div>
+
+        <p class="ola">Olá, <strong th:text="${conta.nome}">Nome</strong></p>
+
+        <div class="saldo">
+            <p class="saldo-rotulo">Saldo disponível</p>
+            <p class="saldo-valor" 
+            th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 00,00</p>
+        </div>
+    </div> 
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abrir conta</title>
+
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+    
+    <div class="cartao">
+        <p class="marca">Banco Entra21</p>
+        <h1 class="titulo">Abrir conta</h1>
+
+        <p class="alerta-sucesso" th:if="${sucesso}" th:text="${sucesso}"></p>
+        <p class="alerta-erro" th:if="${erro}" th:text="${erro}"></p>
+
+        <form th:action="@{/cadastro}" method="post">
+            <label>Nome completo</label>
+            <input type="text" name="nome" required />
+
+            <label>CPF (Só números)</label>
+            <input type="text" name="cpf" maxlength="11" required />
+
+            <label>Senha</label>
+            <input type="password" name="senha" required />
+
+            <button class="botao" type="submit">Cadastrar</button>
+        </form>
+
+        <a class="link" th:href="@{/login}">Já tenho conta</a>
+    </div>
+
+</body>
+</html>
