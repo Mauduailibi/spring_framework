@@ -22,6 +22,36 @@
             <p class="saldo-valor" 
             th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 00,00</p>
         </div>
+
+        <p class="alerta-sucesso" th:if="${sucesso}" th:text="${sucesso}"></p>
+        <p class="alerta-erro" th:if="${erro}" th:text="${erro}"></p>
+
+        <div class="operacoes">
+            <form class="operacao" th:action="@{/deposito}" method="post">
+                <h3>Depósito</h3>
+                <label>Valor</label>
+                <input type="number" name="valor" step="0.01" min="0.01" required />
+                <button type="submit" class="botao">Depositar</button>
+            </form>
+
+            <form class="operacao" th:action="@{/saque}" method="post">
+                <h3>Saque</h3>
+                <label>Valor</label>
+                <input type="number" name="valor" step="0.01" min="0.01" required />
+                <button type="submit" class="botao">Sacar</button>
+            </form>
+
+            <form class="operacao" th:action="@{/pix}" method="post">
+                <h3>PIX</h3>
+                <label>CPF (Destinatário)</label>
+                <input type="number" maxlength="11" name="cpfDestino" required />
+
+                <label>Valor</label>
+                <input type="number" name="valor" step="0.01" min="0.01" required />
+
+                <button type="submit" class="botao">Enviar PIX</button>
+            </form>
+        </div>
     </div> 
 
 </body>

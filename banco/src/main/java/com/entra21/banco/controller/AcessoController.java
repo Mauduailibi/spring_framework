@@ -63,5 +63,10 @@ public class AcessoController {
         session.setAttribute("contaId", conta.getId());
         return "redirect:/conta";
     }
-    
+
+    @GetMapping("/sair")
+    public String sair(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
+    }
 }
