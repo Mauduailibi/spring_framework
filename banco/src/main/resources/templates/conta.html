@@ -52,6 +52,21 @@
                 <button type="submit" class="botao">Enviar PIX</button>
             </form>
         </div>
+
+        <h2 class="subtitulo">Extrato</h2>
+        <table class="extrato">
+            <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+            </tr>
+            <tr th:each="mov : ${movimentacoes}">
+                <td th:text="${#temporals.format(mov.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${mov.descricao}"></td>
+                <td th:text="${#numbers.formatDecimal(mov.valor, 1, 'POINT', 2, 'COMMA')}" 
+                th:classappend="${mov.valor < 0} ? 'saida' : 'entrada'"></td>
+            </tr>
+        </table>      
     </div> 
 
 </body>
